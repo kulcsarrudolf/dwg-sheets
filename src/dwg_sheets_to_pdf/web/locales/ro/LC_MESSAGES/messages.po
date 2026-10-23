@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: DWG Sheets VERSION\n"
 "Report-Msgid-Bugs-To: https://github.com/kulcsarrudolf/dwg-sheets-to-pdf/issues\n"
-"POT-Creation-Date: 2026-10-23 15:45+0300\n"
+"POT-Creation-Date: 2026-10-23 15:50+0300\n"
 "PO-Revision-Date: 2026-10-23 15:17+0300\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language: ro\n"
@@ -174,37 +174,37 @@ msgstr "Selectati"
 msgid "Select %(name)s"
 msgstr "Selectati %(name)s"
 
-#: src/dwg_sheets_to_pdf/web/templates/_job.html:98
+#: src/dwg_sheets_to_pdf/web/templates/_job.html:92
 msgid "Download PDF"
 msgstr "Descarca PDF"
 
-#: src/dwg_sheets_to_pdf/web/templates/_job.html:98
+#: src/dwg_sheets_to_pdf/web/templates/_job.html:92
 #, python-format
 msgid "Download %(name)s as PDF"
 msgstr "Descarca %(name)s ca PDF"
 
-#: src/dwg_sheets_to_pdf/web/templates/_job.html:101
+#: src/dwg_sheets_to_pdf/web/templates/_job.html:95
 msgid "Download PNG"
 msgstr "Descarca PNG"
 
-#: src/dwg_sheets_to_pdf/web/templates/_job.html:101
+#: src/dwg_sheets_to_pdf/web/templates/_job.html:95
 #, python-format
 msgid "Download %(name)s as PNG"
 msgstr "Descarca %(name)s ca PNG"
 
-#: src/dwg_sheets_to_pdf/web/templates/_job.html:111
+#: src/dwg_sheets_to_pdf/web/templates/_job.html:110
 msgid "Selected"
 msgstr "Selectate"
 
-#: src/dwg_sheets_to_pdf/web/templates/_job.html:112
+#: src/dwg_sheets_to_pdf/web/templates/_job.html:111
 msgid "Clear"
 msgstr "Anuleaza selectia"
 
-#: src/dwg_sheets_to_pdf/web/templates/_job.html:113
+#: src/dwg_sheets_to_pdf/web/templates/_job.html:112
 msgid "Download selected (ZIP)"
 msgstr "Descarca selectia (ZIP)"
 
-#: src/dwg_sheets_to_pdf/web/templates/_job.html:119
+#: src/dwg_sheets_to_pdf/web/templates/_job.html:118
 #, python-format
 msgid "Skipped %(name)s: %(reason)s"
 msgstr "Omisa %(name)s: %(reason)s"
@@ -240,23 +240,27 @@ msgstr "sau faceti clic pentru a alege unul. Maximum %(mb)s MB."
 msgid "Output"
 msgstr "Rezultat"
 
-#: src/dwg_sheets_to_pdf/web/templates/index.html:17
+#: src/dwg_sheets_to_pdf/web/templates/index.html:18
 msgid "PDF only"
 msgstr "Doar PDF"
 
 #: src/dwg_sheets_to_pdf/web/templates/index.html:18
+msgid "vector"
+msgstr "vectorial"
+
+#: src/dwg_sheets_to_pdf/web/templates/index.html:19
 msgid "PDF + PNG"
 msgstr "PDF + PNG"
 
-#: src/dwg_sheets_to_pdf/web/templates/index.html:19
+#: src/dwg_sheets_to_pdf/web/templates/index.html:20
 msgid "PDF + PNG 2×"
 msgstr "PDF + PNG 2×"
 
-#: src/dwg_sheets_to_pdf/web/templates/index.html:19
+#: src/dwg_sheets_to_pdf/web/templates/index.html:20
 msgid "300 dpi, sharper"
 msgstr "300 dpi, mai clar"
 
-#: src/dwg_sheets_to_pdf/web/templates/index.html:28
+#: src/dwg_sheets_to_pdf/web/templates/index.html:31
 msgid "Upload"
 msgstr "Incarca"
 

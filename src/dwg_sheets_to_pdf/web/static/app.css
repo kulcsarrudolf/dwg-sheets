@@ -90,17 +90,37 @@ h1 { margin: 0; font: 600 clamp(28px, 5vw, 40px)/1.1 var(--display); letter-spac
 .drop input[type="file"] { position: absolute; width: 1px; height: 1px; opacity: 0; pointer-events: none; }
 .drop.uploading { cursor: progress; }
 
-/* Output choice: three plain options along the bottom of the drop zone. */
+/* Output choice: a segmented control along the bottom of the drop zone, styled like the language switcher.
+   The radios stay in the page (keyboard and screen readers use them); each label is the visible segment. */
 .output {
   position: relative;
-  display: flex; flex-wrap: wrap; justify-content: center; gap: 6px 20px;
-  margin: 0; padding: 0 32px 24px 44px;
-  border: 0;
+  display: flex; flex-wrap: wrap; align-items: center; justify-content: center; gap: 10px 14px;
+  padding: 0 32px 28px 44px;
 }
-.output legend { float: left; margin-right: 4px; color: var(--graphite); font: 500 12px/1.9 var(--mono); letter-spacing: .06em; text-transform: uppercase; }
-.choice { display: inline-flex; align-items: center; gap: 6px; font-size: 14px; cursor: pointer; }
-.choice input { accent-color: var(--accent); margin: 0; }
-.choice small { color: var(--graphite); font-size: 12px; }
+.output-label { color: var(--graphite); font: 500 12px/1 var(--mono); letter-spacing: .06em; text-transform: uppercase; }
+.seg { display: inline-flex; border: 1px solid var(--rule); background: var(--paper); }
+.seg label {
+  position: relative;
+  display: grid; justify-items: center; gap: 2px;
+  min-width: 112px; padding: 7px 14px;
+  cursor: pointer;
+  transition: background .15s, color .15s;
+}
+.seg label + label { border-left: 1px solid var(--rule); }
+.seg input { position: absolute; inset: 0; margin: 0; opacity: 0; cursor: pointer; }
+.seg-name { font: 500 14px/1.2 var(--body); white-space: nowrap; }
+.seg-hint { color: var(--graphite); font: 400 11px/1.2 var(--mono); white-space: nowrap; transition: color .15s; }
+.seg label:hover { background: var(--accent-soft); }
+.seg label:has(input:checked) { background: var(--ink); color: var(--paper); }
+.seg label:has(input:checked) .seg-hint { color: color-mix(in srgb, var(--paper) 72%, transparent); }
+.seg label:has(input:focus-visible) { outline: 2px solid var(--accent); outline-offset: 2px; z-index: 1; }
+@media (max-width: 560px) {
+  .output { padding-inline: 36px 24px; }
+  .seg { display: grid; grid-template-columns: repeat(3, 1fr); width: 100%; }
+  .seg label { min-width: 0; padding-inline: 6px; }
+  .seg-name, .seg-hint { white-space: normal; text-align: center; }
+  .seg-name { font-size: 13px; }
+}
 .upload-bar { position: absolute; inset: auto 0 0 0; visibility: hidden; }
 .drop.uploading .upload-bar { visibility: visible; }
 
