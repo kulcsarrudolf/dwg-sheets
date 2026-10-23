@@ -1,0 +1,173 @@
+/* DWG Sheets. One narrow working column, like a drawing register: drop a file, then read the sheet list.
+   Each colour is one light-dark() pair, so light and dark themes come from the same tokens. */
+
+@font-face { font-family: "Plex Sans"; font-weight: 400; font-display: swap; src: url("fonts/ibm-plex-sans-latin-400-normal.woff2") format("woff2"); unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD; }
+@font-face { font-family: "Plex Sans"; font-weight: 400; font-display: swap; src: url("fonts/ibm-plex-sans-latin-ext-400-normal.woff2") format("woff2"); unicode-range: U+0100-02AF, U+0304, U+0308, U+0329, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C0, U+2113, U+2C60-2C7F, U+A720-A7FF; }
+@font-face { font-family: "Plex Sans"; font-weight: 500; font-display: swap; src: url("fonts/ibm-plex-sans-latin-500-normal.woff2") format("woff2"); unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD; }
+@font-face { font-family: "Plex Sans"; font-weight: 500; font-display: swap; src: url("fonts/ibm-plex-sans-latin-ext-500-normal.woff2") format("woff2"); unicode-range: U+0100-02AF, U+0304, U+0308, U+0329, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C0, U+2113, U+2C60-2C7F, U+A720-A7FF; }
+@font-face { font-family: "Plex Condensed"; font-weight: 600; font-display: swap; src: url("fonts/ibm-plex-sans-condensed-latin-600-normal.woff2") format("woff2"); unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD; }
+@font-face { font-family: "Plex Condensed"; font-weight: 600; font-display: swap; src: url("fonts/ibm-plex-sans-condensed-latin-ext-600-normal.woff2") format("woff2"); unicode-range: U+0100-02AF, U+0304, U+0308, U+0329, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C0, U+2113, U+2C60-2C7F, U+A720-A7FF; }
+@font-face { font-family: "Plex Mono"; font-weight: 400; font-display: swap; src: url("fonts/ibm-plex-mono-latin-400-normal.woff2") format("woff2"); unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD; }
+@font-face { font-family: "Plex Mono"; font-weight: 400; font-display: swap; src: url("fonts/ibm-plex-mono-latin-ext-400-normal.woff2") format("woff2"); unicode-range: U+0100-02AF, U+0304, U+0308, U+0329, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C0, U+2113, U+2C60-2C7F, U+A720-A7FF; }
+@font-face { font-family: "Plex Mono"; font-weight: 500; font-display: swap; src: url("fonts/ibm-plex-mono-latin-500-normal.woff2") format("woff2"); unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD; }
+@font-face { font-family: "Plex Mono"; font-weight: 500; font-display: swap; src: url("fonts/ibm-plex-mono-latin-ext-500-normal.woff2") format("woff2"); unicode-range: U+0100-02AF, U+0304, U+0308, U+0329, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C0, U+2113, U+2C60-2C7F, U+A720-A7FF; }
+
+:root {
+  color-scheme: light dark;
+  --paper:       light-dark(#f7f8f6, #141917);
+  --sheet:       light-dark(#ffffff, #1b2220);
+  --ink:         light-dark(#1d2422, #e6ebe8);
+  --graphite:    light-dark(#5c6662, #9aa5a0);
+  --rule:        light-dark(#dfe3e0, #2b3532);
+  --accent:      light-dark(#0b6e75, #4fb8be);   /* plotter teal */
+  --accent-ink:  light-dark(#ffffff, #0d1514);
+  --accent-soft: light-dark(#e3f0f0, #183a3c);
+  --bad:         light-dark(#b3261e, #f2a29b);
+  --bad-soft:    light-dark(#fbe9e7, #3a1f1d);
+
+  --display: "Plex Condensed", "Arial Narrow", system-ui, sans-serif;
+  --body: "Plex Sans", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --mono: "Plex Mono", ui-monospace, "SF Mono", Menlo, monospace;
+}
+
+* { box-sizing: border-box; }
+html { -webkit-text-size-adjust: 100%; }
+body { margin: 0; background: var(--paper); color: var(--ink); font: 15px/1.55 var(--body); }
+[hidden] { display: none !important; }
+:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+
+.wrap {
+  max-width: 880px;
+  margin: 0 auto;
+  padding-block: 40px 64px;
+  padding-left: max(16px, env(safe-area-inset-left, 0px));
+  padding-right: max(16px, env(safe-area-inset-right, 0px));
+  display: grid;
+  gap: 28px;
+}
+
+/* ---- Header ---------------------------------------------------------- */
+.masthead { display: grid; gap: 6px; }
+.top { display: flex; flex-wrap: wrap; gap: 12px; align-items: center; justify-content: space-between; }
+.eyebrow { font: 500 12px/1 var(--mono); letter-spacing: .08em; text-transform: uppercase; color: var(--graphite); }
+h1 { margin: 0; font: 600 clamp(28px, 5vw, 40px)/1.1 var(--display); letter-spacing: -.01em; }
+.lede { margin: 0; max-width: 62ch; color: var(--graphite); text-wrap: pretty; }
+
+.lang { display: inline-flex; border: 1px solid var(--rule); background: var(--sheet); }
+.lang a { padding: 5px 10px; color: var(--graphite); font: 500 12px/1.2 var(--mono); letter-spacing: .06em; text-decoration: none; }
+.lang a + a { border-left: 1px solid var(--rule); }
+.lang a:hover { color: var(--ink); }
+.lang a[aria-current] { background: var(--ink); color: var(--paper); }
+
+/* ---- Drop zone: a sheet of paper with a dashed trim line and a wider binding margin ---- */
+.drop {
+  position: relative;
+  display: grid;
+  min-height: 190px;
+  background: var(--sheet);
+  border: 1px solid var(--rule);
+  transition: background .15s;
+}
+.drop::before {
+  content: "";
+  position: absolute;
+  inset: 12px 12px 12px 24px;
+  border: 1.5px dashed var(--rule);
+  pointer-events: none;
+  transition: border-color .15s;
+}
+.drop:hover::before, .drop:focus-within::before, .drop.over::before { border-color: var(--accent); }
+.drop.over { background: var(--accent-soft); }
+.drop-label { display: grid; place-content: center; gap: 8px; padding: 32px 24px; text-align: center; cursor: pointer; }
+.drop .big { font: 600 20px/1.2 var(--display); }
+.drop .small { color: var(--graphite); font-size: 13px; }
+.drop input[type="file"] { position: absolute; width: 1px; height: 1px; opacity: 0; pointer-events: none; }
+.drop.uploading { cursor: progress; }
+.upload-bar { position: absolute; inset: auto 0 0 0; visibility: hidden; }
+.drop.uploading .upload-bar { visibility: visible; }
+
+/* ---- Progress -------------------------------------------------------- */
+.job { display: grid; gap: 24px; }
+.status { display: grid; gap: 8px; }
+.status-line { display: flex; flex-wrap: wrap; gap: 6px 14px; align-items: baseline; justify-content: space-between; }
+.status-text { font-weight: 500; }
+.status-count { font: 13px var(--mono); color: var(--graphite); font-variant-numeric: tabular-nums; }
+.bar { height: 4px; background: var(--rule); overflow: hidden; }
+.bar > span { display: block; height: 100%; width: 0; background: var(--accent); transition: width .3s ease; }
+.bar.indeterminate > span { width: 30%; animation: slide 1.1s ease-in-out infinite; }
+@keyframes slide { from { transform: translateX(-100%); } to { transform: translateX(340%); } }
+
+.alert { padding: 12px 14px; background: var(--bad-soft); color: var(--bad); border-left: 3px solid var(--bad); }
+.note { margin: 0; color: var(--graphite); }
+
+/* ---- Buttons ---------------------------------------------------------- */
+.btn {
+  display: inline-flex; align-items: center; justify-content: center;
+  padding: 7px 14px;
+  border: 1px solid var(--rule);
+  background: var(--sheet);
+  color: var(--ink);
+  font: 500 14px/1.2 var(--body);
+  text-decoration: none;
+  cursor: pointer;
+}
+.btn:hover { border-color: var(--graphite); }
+.btn.primary { background: var(--accent); border-color: var(--accent); color: var(--accent-ink); }
+.btn.primary:hover { filter: brightness(1.08); }
+.btn.quiet { border-color: transparent; background: transparent; color: var(--graphite); }
+.btn.quiet:hover { color: var(--ink); }
+.btn[aria-disabled="true"] { opacity: .45; pointer-events: none; }
+
+/* ---- Sheet register: one row per sheet, no table chrome ---------------- */
+.register { display: grid; gap: 14px; }
+.register-head { display: flex; flex-wrap: wrap; gap: 12px; align-items: end; justify-content: space-between; }
+.register-head h2 { margin: 0; font: 600 22px/1.2 var(--display); }
+.file { color: var(--graphite); font-size: 13px; overflow-wrap: anywhere; }
+.actions { display: flex; flex-wrap: wrap; gap: 8px; }
+
+.sheets { list-style: none; margin: 0; padding: 0; background: var(--sheet); border: 1px solid var(--rule); }
+.sheet {
+  display: grid;
+  grid-template-columns: 64px minmax(56px, max-content) 64px minmax(0, 1fr) auto;
+  grid-template-areas: "outline name scale size links";
+  gap: 4px 16px;
+  align-items: center;
+  padding: 10px 16px;
+  font-variant-numeric: tabular-nums;
+}
+.sheet + .sheet { border-top: 1px solid var(--rule); }
+.sheet .outline { grid-area: outline; display: grid; place-items: center; height: 44px; }
+.sheet .outline > span { display: block; border: 1px solid var(--graphite); background: var(--paper); }
+.sheet .outline.double > span { box-shadow: inset 0 0 0 2px var(--paper), inset 0 0 0 3px var(--graphite); }
+.sheet .name { grid-area: name; font: 600 17px/1.2 var(--display); }
+.sheet .scale { grid-area: scale; font: 13px var(--mono); color: var(--graphite); }
+.sheet .size { grid-area: size; font: 13px var(--mono); }
+.sheet .unit { color: var(--graphite); }
+.sheet .links { grid-area: links; display: flex; gap: 6px; justify-content: flex-end; }
+.sheet .links .btn { padding: 5px 10px; font-size: 13px; }
+.state { font-size: 13px; color: var(--graphite); }
+.state.failed { color: var(--bad); }
+
+.skipped { margin: 0; padding-left: 18px; color: var(--graphite); font-size: 13px; }
+
+/* ---- Intro and footer --------------------------------------------------- */
+.how { display: grid; gap: 16px; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); }
+.how div { display: grid; gap: 4px; align-content: start; }
+.how h3 { margin: 0; font: 600 15px/1.3 var(--display); }
+.how p { margin: 0; color: var(--graphite); font-size: 14px; }
+footer { color: var(--graphite); font-size: 12px; border-top: 1px solid var(--rule); padding-top: 14px; }
+
+/* ---- Phones: each sheet stacks, the buttons get the full width ---------- */
+@media (max-width: 640px) {
+  .sheet {
+    grid-template-columns: 1fr auto;
+    grid-template-areas: "name outline" "scale outline" "size outline" "links links";
+    padding: 14px 16px;
+  }
+  .sheet .links { justify-content: stretch; padding-top: 6px; }
+  .sheet .links .btn { flex: 1; padding: 8px 10px; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before { transition: none !important; animation: none !important; }
+}

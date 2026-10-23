@@ -1,0 +1,184 @@
+# Hungarian translations for DWG Sheets.
+# Copyright (C) 2026 ORGANIZATION
+# This file is distributed under the same license as the DWG Sheets project.
+# FIRST AUTHOR <EMAIL@ADDRESS>, 2026.
+#
+msgid ""
+msgstr ""
+"Project-Id-Version: DWG Sheets VERSION\n"
+"Report-Msgid-Bugs-To: https://github.com/kulcsarrudolf/dwg-sheets-to-pdf/issues\n"
+"POT-Creation-Date: 2026-10-23 15:17+0300\n"
+"PO-Revision-Date: 2026-10-23 15:17+0300\n"
+"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"Language: hu\n"
+"Language-Team: Hungarian\n"
+"Plural-Forms: nplurals=1; plural=0;\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=utf-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Generated-By: Babel 2.18.0\n"
+
+#: src/dwg_sheets_to_pdf/web/i18n.py:36
+msgid "Choose a .dwg or .dxf file."
+msgstr "Válasszon egy .dwg vagy .dxf fájlt."
+
+#: src/dwg_sheets_to_pdf/web/i18n.py:37
+#, python-format
+msgid "The file is larger than %(mb)s MB."
+msgstr "A fájl nagyobb, mint %(mb)s MB."
+
+#: src/dwg_sheets_to_pdf/web/i18n.py:38
+msgid "The file is empty."
+msgstr "A fájl üres."
+
+#: src/dwg_sheets_to_pdf/web/i18n.py:39
+msgid "This export no longer exists. Uploads are deleted after a while, so upload the drawing again."
+msgstr "Ez az export már nem létezik. A feltöltések egy idő után törlődnek, ezért töltse fel újra a rajzot."
+
+#: src/dwg_sheets_to_pdf/web/i18n.py:40
+msgid "No sheets found. Each sheet needs a “PL. NR.” title block inside a rectangular frame."
+msgstr "Nem található tervlap. Minden tervlaphoz egy „PL. NR.” szövegmező kell egy téglalap alakú kereten belül."
+
+#: src/dwg_sheets_to_pdf/web/i18n.py:41
+msgid "The drawing could not be read. Check that it opens in AutoCAD and try again."
+msgstr "A rajzot nem sikerült beolvasni. Ellenőrizze, hogy megnyílik-e AutoCAD-ben, és próbálja újra."
+
+#: src/dwg_sheets_to_pdf/web/i18n.py:42
+msgid "Something went wrong while exporting. Try again."
+msgstr "Hiba történt az exportálás közben. Próbálja újra."
+
+#: src/dwg_sheets_to_pdf/web/i18n.py:45
+msgid "no frame around its title block"
+msgstr "nincs keret a szövegmező körül"
+
+#: src/dwg_sheets_to_pdf/web/i18n.py:46
+msgid "no 1:N scale inside its frame"
+msgstr "nincs 1:N méretarány a keretben"
+
+#: src/dwg_sheets_to_pdf/web/i18n.py:47
+msgid "the scale in its title block is not valid"
+msgstr "a szövegmezőben lévő méretarány érvénytelen"
+
+#: src/dwg_sheets_to_pdf/web/i18n.py:72
+#, python-format
+msgid "%(failed)s of %(total)s sheet could not be exported."
+msgid_plural "%(failed)s of %(total)s sheets could not be exported."
+msgstr[0] "%(total)s tervlapból %(failed)s exportálása nem sikerült."
+
+#: src/dwg_sheets_to_pdf/web/templates/_intro.html:1
+msgid "The files were deleted from the server."
+msgstr "A fájlok törölve lettek a szerverről."
+
+#: src/dwg_sheets_to_pdf/web/templates/_intro.html:4
+msgid "Finds each sheet"
+msgstr "Megtalálja a tervlapokat"
+
+#: src/dwg_sheets_to_pdf/web/templates/_intro.html:5
+msgid "Every title block with a “PL. NR.” sheet number marks a sheet. The rectangle around it is the page."
+msgstr "Minden „PL. NR.” lapszámos szövegmező egy tervlapot jelöl. A körülötte lévő téglalap a lap."
+
+#: src/dwg_sheets_to_pdf/web/templates/_intro.html:8
+msgid "Keeps the scale"
+msgstr "Megtartja a méretarányt"
+
+#: src/dwg_sheets_to_pdf/web/templates/_intro.html:9
+msgid "The “SCARA 1:N” in the title block sets the plot scale, so a 1:100 sheet prints at 1:100 at 100%."
+msgstr "A szövegmező „SCARA 1:N” értéke adja a plottolási méretarányt, így egy 1:100-as lap 100%-on nyomtatva 1:100-as."
+
+#: src/dwg_sheets_to_pdf/web/templates/_intro.html:12
+msgid "Frames the page"
+msgstr "Lapra igazít"
+
+#: src/dwg_sheets_to_pdf/web/templates/_intro.html:13
+msgid "A double border uses its outer line as the paper edge. A single border gets 20 mm binding and 10 mm margins."
+msgstr "Dupla keretnél a külső vonal a papír széle. Az egyszerű keret 20 mm fűzési és 10 mm egyéb margót kap."
+
+#: src/dwg_sheets_to_pdf/web/templates/_job.html:9
+msgid "Waiting for a free slot"
+msgstr "Várakozás szabad helyre"
+
+#: src/dwg_sheets_to_pdf/web/templates/_job.html:10
+msgid "Reading the drawing and finding sheets"
+msgstr "A rajz beolvasása és a tervlapok keresése"
+
+#: src/dwg_sheets_to_pdf/web/templates/_job.html:11
+msgid "Plotting sheets"
+msgstr "Tervlapok plottolása"
+
+#: src/dwg_sheets_to_pdf/web/templates/_job.html:12
+msgid "Done. Every sheet is ready."
+msgstr "Kész. Minden tervlap elkészült."
+
+#: src/dwg_sheets_to_pdf/web/templates/_job.html:16
+#, python-format
+msgid "%(done)s of %(total)s sheet"
+msgid_plural "%(done)s of %(total)s sheets"
+msgstr[0] "%(done)s / %(total)s tervlap"
+
+#: src/dwg_sheets_to_pdf/web/templates/_job.html:30
+#, python-format
+msgid "%(count)s sheet"
+msgid_plural "%(count)s sheets"
+msgstr[0] "%(count)s tervlap"
+
+#: src/dwg_sheets_to_pdf/web/templates/_job.html:35
+#: src/dwg_sheets_to_pdf/web/templates/_job.html:37
+msgid "Download all (ZIP)"
+msgstr "Összes letöltése (ZIP)"
+
+#: src/dwg_sheets_to_pdf/web/templates/_job.html:40
+msgid "Delete files now"
+msgstr "Fájlok törlése most"
+
+#: src/dwg_sheets_to_pdf/web/templates/_job.html:56
+msgid "Open"
+msgstr "Megnyitás"
+
+#: src/dwg_sheets_to_pdf/web/templates/_job.html:57
+msgid "Download"
+msgstr "Letöltés"
+
+#: src/dwg_sheets_to_pdf/web/templates/_job.html:59
+msgid "Failed"
+msgstr "Sikertelen"
+
+#: src/dwg_sheets_to_pdf/web/templates/_job.html:61
+msgid "Plotting"
+msgstr "Plottolás"
+
+#: src/dwg_sheets_to_pdf/web/templates/_job.html:71
+#, python-format
+msgid "Skipped %(name)s: %(reason)s"
+msgstr "Kihagyva: %(name)s (%(reason)s)"
+
+#: src/dwg_sheets_to_pdf/web/templates/base.html:7
+#: src/dwg_sheets_to_pdf/web/templates/base.html:27
+msgid "Drop a drawing and get every sheet as its own PDF, plotted at the scale in its title block."
+msgstr "Húzzon ide egy rajzot, és minden tervlapot külön PDF-ként kap meg, a szövegmezőben megadott méretarányban."
+
+#: src/dwg_sheets_to_pdf/web/templates/base.html:19
+msgid "Language"
+msgstr "Nyelv"
+
+#: src/dwg_sheets_to_pdf/web/templates/base.html:33
+#, python-format
+msgid "Uploaded drawings and their PDFs are deleted automatically after %(ttl)s minutes."
+msgstr "A feltöltött rajzok és PDF-jeik %(ttl)s perc után automatikusan törlődnek."
+
+#: src/dwg_sheets_to_pdf/web/templates/base.html:34
+msgid "Drawing units are metres."
+msgstr "A rajz mértékegysége méter."
+
+#: src/dwg_sheets_to_pdf/web/templates/index.html:10
+msgid "Drop a .dwg or .dxf file here"
+msgstr "Húzzon ide egy .dwg vagy .dxf fájlt"
+
+#: src/dwg_sheets_to_pdf/web/templates/index.html:11
+#, python-format
+msgid "or click to choose one. Up to %(mb)s MB."
+msgstr "vagy kattintson a kiválasztáshoz. Legfeljebb %(mb)s MB."
+
+#: src/dwg_sheets_to_pdf/web/templates/index.html:15
+msgid "Upload"
+msgstr "Feltöltés"
+

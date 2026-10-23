@@ -1,0 +1,77 @@
+{#- The job panel. While the export runs it asks for a fresh copy of itself; the finished copy stops asking. -#}
+<section class="job"
+  {% if job.running %}hx-get="/jobs/{{ job.id }}/panel" hx-trigger="load delay:700ms" hx-swap="outerHTML"{% endif %}>
+
+  {% if job.status != "failed" %}
+  <div class="status">
+    <div class="status-line">
+      <span class="status-text">
+        {%- if job.status == "queued" %}{{ _('Waiting for a free slot') }}
+        {%- elif job.status == "reading" %}{{ _('Reading the drawing and finding sheets') }}
+        {%- elif job.status == "exporting" %}{{ _('Plotting sheets') }}
+        {%- else %}{{ _('Done. Every sheet is ready.') }}{% endif -%}
+      </span>
+      {% if job.total %}
+      <span class="status-count">
+        {% trans count=job.total, done=job.done | num(t), total=job.total | num(t) %}{{ done }} of {{ total }} sheet{% pluralize count %}{{ done }} of {{ total }} sheets{% endtrans %}
+      </span>
+      {% endif %}
+    </div>
+    <div class="bar{% if not job.total %} indeterminate{% endif %}"><span style="width: {{ job.percent }}%"></span></div>
+  </div>
+  {% endif %}
+
+  {% if job.error_code %}<div class="alert" role="alert">{{ t.error(job.error_code, job.error_params) }}</div>{% endif %}
+
+  {% if job.sheets %}
+  <div class="register">
+    <div class="register-head">
+      <div>
+        <h2>{% trans count=job.total %}{{ count }} sheet{% pluralize %}{{ count }} sheets{% endtrans %}</h2>
+        <div class="file">{{ job.drawing }}</div>
+      </div>
+      <div class="actions">
+        {% if job.zip_url %}
+        <a class="btn primary" href="{{ job.zip_url }}">{{ _('Download all (ZIP)') }}</a>
+        {% else %}
+        <span class="btn primary" aria-disabled="true">{{ _('Download all (ZIP)') }}</span>
+        {% endif %}
+        <button class="btn quiet" type="button" hx-delete="/jobs/{{ job.id }}" hx-target="#job" hx-swap="innerHTML">
+          {{ _('Delete files now') }}
+        </button>
+      </div>
+    </div>
+
+    <ol class="sheets">
+      {% for s in job.sheets %}
+      <li class="sheet {{ s.status }}">
+        <span class="outline{% if s.double %} double{% endif %}" aria-hidden="true">
+          <span style="width: {{ s.outline[0] }}px; height: {{ s.outline[1] }}px"></span>
+        </span>
+        <span class="name">{{ s.name }}</span>
+        <span class="scale">1:{{ s.scale | num(t) }}</span>
+        <span class="size">{{ s.width | num(t) }} &times; {{ s.height | num(t) }} <span class="unit">mm</span></span>
+        <span class="links">
+          {% if s.url %}
+          <a class="btn" href="{{ s.url }}" target="_blank" rel="noopener">{{ _('Open') }}</a>
+          <a class="btn" href="{{ s.url }}?download=1">{{ _('Download') }}</a>
+          {% elif s.status == "failed" %}
+          <span class="state failed">{{ _('Failed') }}</span>
+          {% else %}
+          <span class="state">{{ _('Plotting') }}</span>
+          {% endif %}
+        </span>
+      </li>
+      {% endfor %}
+    </ol>
+
+    {% if job.skipped %}
+    <ul class="skipped">
+      {% for s in job.skipped %}
+      <li>{% trans name=s.name, reason=t.skip_reason(s.code, s.reason) %}Skipped {{ name }}: {{ reason }}{% endtrans %}</li>
+      {% endfor %}
+    </ul>
+    {% endif %}
+  </div>
+  {% endif %}
+</section>

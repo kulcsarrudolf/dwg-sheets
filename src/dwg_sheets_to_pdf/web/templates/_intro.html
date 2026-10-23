@@ -1,0 +1,15 @@
+{% if deleted %}<p class="note">{{ _('The files were deleted from the server.') }}</p>{% endif %}
+<section class="how">
+  <div>
+    <h3>{{ _('Finds each sheet') }}</h3>
+    <p>{{ _('Every title block with a “PL. NR.” sheet number marks a sheet. The rectangle around it is the page.') }}</p>
+  </div>
+  <div>
+    <h3>{{ _('Keeps the scale') }}</h3>
+    <p>{{ _('The “SCARA 1:N” in the title block sets the plot scale, so a 1:100 sheet prints at 1:100 at 100%.') }}</p>
+  </div>
+  <div>
+    <h3>{{ _('Frames the page') }}</h3>
+    <p>{{ _('A double border uses its outer line as the paper edge. A single border gets 20 mm binding and 10 mm margins.') }}</p>
+  </div>
+</section>

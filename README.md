@@ -27,6 +27,10 @@ Sheets without a frame or a scale are skipped and listed, so nothing is silently
 
 Upload a drawing in the browser, watch its sheets plot, and download them one by one or as a ZIP.
 The page is in English, Romanian and Hungarian: it follows the browser's language, remembers the reader's choice, and takes `?lang=en|ro|hu` in links.
+Translations are gettext `.po` files; [docs/translations.md](docs/translations.md) explains how to edit them or add a language.
+
+The pages are rendered on the server with Jinja2 and updated in place with [htmx](https://htmx.org/) (pinned, served by the app with the fonts, so nothing loads from other sites).
+Each export has its own address (`/jobs/<id>`), so a reload or a shared link shows the same result while it lives.
 
 ```sh
 docker compose up -d --build

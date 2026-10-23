@@ -1,0 +1,22 @@
+{% extends "base.html" %}
+{% block main %}
+  <form class="drop" id="upload" hx-post="/jobs" hx-encoding="multipart/form-data" hx-trigger="change"
+        hx-target="#job" hx-swap="innerHTML" hx-disabled-elt="#file"
+        data-max-bytes="{{ config.max_upload_mb * 1024 * 1024 }}"
+        data-too-large="{{ t.error('too_large', {'mb': config.max_upload_mb}) }}"
+        data-bad-type="{{ t.error('bad_type') }}"
+        action="/jobs" method="post" enctype="multipart/form-data">
+    <label for="file" class="drop-label">
+      <span class="big">{{ _('Drop a .dwg or .dxf file here') }}</span>
+      <span class="small">{% trans mb=config.max_upload_mb %}or click to choose one. Up to {{ mb }} MB.{% endtrans %}</span>
+    </label>
+    <input type="file" id="file" name="file" accept=".dwg,.dxf" required>
+    <div class="bar upload-bar" aria-hidden="true"><span></span></div>
+    <noscript><button type="submit" class="btn">{{ _('Upload') }}</button></noscript>
+  </form>
+
+  <div id="job" aria-live="polite">
+    {% if error %}{% include "_error.html" %}{% endif %}
+    {% if job %}{% include "_job.html" %}{% elif not error %}{% include "_intro.html" %}{% endif %}
+  </div>
+{% endblock %}

@@ -1,0 +1,38 @@
+<!doctype html>
+<html lang="{{ lang }}">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>DWG Sheets</title>
+<meta name="description" content="{{ _('Drop a drawing and get every sheet as its own PDF, plotted at the scale in its title block.') }}">
+<meta name="htmx-config" content='{"responseHandling":[{"code":"204","swap":false},{"code":"[2345]..","swap":true}],"historyCacheSize":0}'>
+<link rel="icon" href="{{ url_for('static', path='icon.svg') }}" type="image/svg+xml">
+<link rel="stylesheet" href="{{ url_for('static', path='app.css') }}?v={{ config.version }}">
+<script src="{{ url_for('static', path='vendor/htmx-2.0.11.min.js') }}" defer></script>
+<script src="{{ url_for('static', path='app.js') }}?v={{ config.version }}" defer></script>
+</head>
+<body>
+<main class="wrap">
+  <header class="masthead">
+    <div class="top">
+      <span class="eyebrow">DWG / DXF &rarr; PDF</span>
+      <nav class="lang" aria-label="{{ _('Language') }}">
+        {% for code, label in languages.items() %}
+          <a href="?lang={{ code }}" hreflang="{{ code }}" lang="{{ code }}" title="{{ label }}"
+             {% if code == lang %}aria-current="true"{% endif %}>{{ code | upper }}</a>
+        {% endfor %}
+      </nav>
+    </div>
+    <h1>DWG Sheets</h1>
+    <p class="lede">{{ _('Drop a drawing and get every sheet as its own PDF, plotted at the scale in its title block.') }}</p>
+  </header>
+
+  {% block main %}{% endblock %}
+
+  <footer>
+    {% trans ttl=config.ttl_minutes %}Uploaded drawings and their PDFs are deleted automatically after {{ ttl }} minutes.{% endtrans %}
+    {{ _('Drawing units are metres.') }}
+  </footer>
+</main>
+</body>
+</html>

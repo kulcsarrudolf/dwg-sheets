@@ -5,28 +5,25 @@ from __future__ import annotations
 import asyncio
 import base64
 import contextlib
+import mimetypes
 import secrets
 from collections.abc import AsyncIterator
-from concurrent.futures import ThreadPoolExecutor
-from functools import partial
 from importlib.resources import files
-from pathlib import Path
 
-from fastapi import FastAPI, HTTPException, Request, UploadFile
-from fastapi.responses import FileResponse, HTMLResponse, JSONResponse, Response
+from fastapi import FastAPI, Request
+from fastapi.responses import FileResponse, JSONResponse, Response
+from fastapi.staticfiles import StaticFiles
 
 from .. import __version__
 from ..cadcraft import CadCraft
-from ..export import Options, export, plan
-from .jobs import Exporter, JobStore, Planner, run_job
+from ..export import export, plan
+from .api import api_router
+from .jobs import Exporter, JobStore, Planner
+from .service import JobError, JobService
 from .settings import Settings
+from .views import views_router
 
-ALLOWED_SUFFIXES = (".dwg", ".dxf")
-_CHUNK = 1024 * 1024
-
-
-class UploadTooLarge(Exception):
-    pass
+mimetypes.add_type("font/woff2", ".woff2")  # slim images have no system MIME table for it
 
 
 def create_app(
@@ -36,7 +33,6 @@ def create_app(
 ) -> FastAPI:
     settings = settings or Settings.from_env()
     store = JobStore(settings.work_dir, settings.job_ttl_minutes * 60)
-    options = Options()
 
     if planner is None or exporter is None:
         cad = CadCraft(settings.cadcraft)  # fails at start-up, not on the first upload, if CADCraft is missing
@@ -44,8 +40,7 @@ def create_app(
         exporter = exporter or (
             lambda p, opts, on_done: export(cad, p, opts, workers=settings.export_workers, on_done=on_done)
         )
-
-    jobs_pool = ThreadPoolExecutor(max_workers=settings.max_concurrent_jobs, thread_name_prefix="job")
+    service = JobService(settings, store, planner, exporter)
 
     @contextlib.asynccontextmanager
     async def lifespan(app: FastAPI) -> AsyncIterator[None]:
@@ -61,7 +56,7 @@ def create_app(
             yield
         finally:
             task.cancel()
-            jobs_pool.shutdown(wait=False, cancel_futures=True)
+            service.shutdown()
 
     app = FastAPI(title="DWG Sheets to PDF", version=__version__, lifespan=lifespan, docs_url=None, redoc_url=None)
 
@@ -75,95 +70,32 @@ def create_app(
             )
         return await call_next(request)
 
-    @app.get("/", response_class=HTMLResponse)
-    def index() -> str:
-        html = files("dwg_sheets_to_pdf.web").joinpath("static/index.html").read_text(encoding="utf-8")
-        return html.replace("{{MAX_UPLOAD_MB}}", str(settings.max_upload_mb)).replace(
-            "{{TTL_MINUTES}}", str(settings.job_ttl_minutes)
+    @app.exception_handler(JobError)
+    async def job_error(request: Request, e: JobError) -> JSONResponse:
+        return JSONResponse(
+            {"detail": {"code": e.code, "message": e.message, "params": e.params}}, status_code=e.status
         )
 
     @app.get("/healthz")
     def healthz() -> dict:
         return {"status": "ok", "version": __version__}
 
-    @app.post("/api/jobs", status_code=202)
-    async def create_job(file: UploadFile) -> JSONResponse:
-        name = Path(file.filename or "").name
-        if Path(name).suffix.lower() not in ALLOWED_SUFFIXES:
-            raise _error(400, "bad_type", "Upload a .dwg or .dxf file.")
-        limit = settings.max_upload_mb * 1024 * 1024
+    static_dir = files("dwg_sheets_to_pdf.web").joinpath("static")
+    app.mount("/static", StaticFiles(directory=str(static_dir)), name="static")
 
-        def write_upload(dest: Path) -> None:
-            size = 0
-            with dest.open("wb") as out:
-                while chunk := file.file.read(_CHUNK):
-                    size += len(chunk)
-                    if size > limit:
-                        raise UploadTooLarge
-                    out.write(chunk)
-            if size == 0:
-                raise _error(400, "empty", "The file is empty.")
+    @app.get("/favicon.ico", include_in_schema=False)
+    def favicon() -> FileResponse:  # browsers ask for it even when the page names another icon
+        return FileResponse(str(static_dir.joinpath("icon.svg")), media_type="image/svg+xml")
 
-        try:
-            state = await asyncio.to_thread(store.create, name, write_upload)
-        except UploadTooLarge:
-            raise _error(
-                413, "too_large", f"The file is larger than {settings.max_upload_mb} MB.", mb=settings.max_upload_mb
-            ) from None
-        jobs_pool.submit(partial(run_job, store, state.id, options, planner, exporter))
-        return JSONResponse(_public(state.to_json()), status_code=202)
-
-    @app.get("/api/jobs/{job_id}")
-    def get_job(job_id: str) -> dict:
-        return _public(_load(store, job_id).to_json())
-
-    @app.delete("/api/jobs/{job_id}", status_code=204)
-    def delete_job(job_id: str) -> Response:
-        _load(store, job_id)
-        store.delete(job_id)
-        return Response(status_code=204)
-
-    @app.get("/api/jobs/{job_id}/pdf/{file}")
-    def get_pdf(job_id: str, file: str, download: bool = False) -> FileResponse:
-        try:
-            path = store.pdf_path(job_id, file)
-        except KeyError:
-            raise _error(404, "not_found", "Not found.") from None
-        disposition = "attachment" if download else "inline"
-        return FileResponse(path, media_type="application/pdf", filename=file, content_disposition_type=disposition)
-
-    @app.get("/api/jobs/{job_id}/zip")
-    def get_zip(job_id: str) -> FileResponse:
-        try:
-            state = store.load(job_id)
-            path = store.zip_path(job_id)
-        except KeyError:
-            raise _error(404, "not_found", "Not found, or not finished yet.") from None
-        return FileResponse(path, media_type="application/zip", filename=f"{Path(state.drawing).stem} - PDF.zip")
-
+    app.include_router(api_router(service))
+    app.include_router(
+        views_router(
+            service,
+            {"max_upload_mb": settings.max_upload_mb, "ttl_minutes": settings.job_ttl_minutes, "version": __version__},
+        )
+    )
     app.state.store = store
     return app
-
-
-def _load(store: JobStore, job_id: str):
-    try:
-        return store.load(job_id)
-    except KeyError:
-        raise _error(404, "not_found", "Not found. Jobs are deleted after a while; upload the drawing again.") from None
-
-
-def _error(status: int, code: str, message: str, **params) -> HTTPException:
-    """An HTTP error the page can translate: `code` and `params` pick and fill its own message."""
-    return HTTPException(status, detail={"code": code, "message": message, "params": params})
-
-
-def _public(job: dict) -> dict:
-    """Job state for the browser, with download links."""
-    base = f"/api/jobs/{job['id']}"
-    for s in job["sheets"]:
-        s["url"] = f"{base}/pdf/{s['file']}" if s["status"] == "done" else None
-    job["zip_url"] = f"{base}/zip" if job["status"] == "done" else None
-    return job
 
 
 def _authorized(request: Request, password: str) -> bool:

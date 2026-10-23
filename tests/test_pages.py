@@ -1,0 +1,114 @@
+"""The HTML pages: server-rendered, updated in place by htmx."""
+
+import io
+import re
+import threading
+
+from fakes import fake_exporter, fake_planner, wait
+
+HX = {"HX-Request": "true"}
+
+
+def html_upload(client, name="Project.dwg", data=b"AC1032 drawing", headers=HX, **kw):
+    files = {"file": (name, io.BytesIO(data), "application/octet-stream")}
+    return client.post("/jobs", files=files, headers=headers, follow_redirects=False, **kw)
+
+
+def job_id_from(response):
+    return response.headers["HX-Push-Url"].rsplit("/", 1)[1]
+
+
+def test_language_from_query_then_cookie_then_browser(make_client):
+    with make_client() as c:
+        r = c.get("/?lang=ro")
+        assert '<html lang="ro">' in r.text
+        assert "Trageti aici un fisier .dwg sau .dxf" in r.text
+        assert 'aria-current="true">RO<' in r.text.replace("\n", "").replace("  ", "")
+        assert r.cookies.get("lang") == "ro"
+        assert '<html lang="ro">' in c.get("/").text  # remembered
+        c.cookies.clear()
+        r = c.get("/", headers={"Accept-Language": "hu-HU,hu;q=0.9"})
+        assert '<html lang="hu">' in r.text and "Húzzon ide egy .dwg vagy .dxf fájlt" in r.text
+        assert '<html lang="en">' in c.get("/", headers={"Accept-Language": "de"}).text
+
+
+def test_upload_shows_the_job_and_stops_polling_when_done(make_client):
+    with make_client(planner=fake_planner(skipped=[("A99", "x", "no_frame")])) as c:
+        r = html_upload(c)
+        assert r.status_code == 200
+        job_id = job_id_from(r)
+        assert r.headers["HX-Push-Url"] == f"/jobs/{job_id}"
+        assert "<html" not in r.text  # a fragment, swapped into the page
+        wait(c, job_id)
+
+        panel = c.get(f"/jobs/{job_id}/panel?lang=en", headers=HX).text
+        assert "hx-trigger" not in panel  # finished: no more polling
+        assert "Done. Every sheet is ready." in panel
+        assert "2 of 2 sheets" in panel and "2 sheets" in panel
+        assert panel.count(f"/api/jobs/{job_id}/pdf/") == 4  # Open and Download for each sheet
+        assert f"/api/jobs/{job_id}/zip" in panel
+        assert "Skipped A99: no frame around its title block" in panel
+        assert "420 &times; 297" in panel
+
+        ro = c.get(f"/jobs/{job_id}?lang=ro").text  # the job has its own page, in any language
+        assert "<html" in ro and "Gata. Toate plansele sunt pregatite." in ro and "2 planse" in ro
+        assert "Omisa A99: nu are chenar in jurul cartusului" in ro
+
+
+def test_running_job_keeps_polling(make_client):
+    gate = threading.Event()
+
+    def slow_exporter(p, options, on_done):
+        gate.wait(5)
+        return fake_exporter()(p, options, on_done)
+
+    with make_client(exporter=slow_exporter) as c:
+        job_id = job_id_from(html_upload(c))
+        panel = c.get(f"/jobs/{job_id}/panel", headers=HX).text
+        assert f'hx-get="/jobs/{job_id}/panel"' in panel
+        gate.set()
+        wait(c, job_id)
+
+
+def test_upload_errors_are_translated(make_client):
+    with make_client(max_upload_mb=1) as c:
+        c.cookies.set("lang", "ro")
+        r = html_upload(c, "notes.txt", b"AC10")
+        assert r.status_code == 400
+        assert "Alegeti un fisier .dwg sau .dxf." in r.text
+        c.cookies.set("lang", "hu")
+        r = html_upload(c, "big.dwg", b"AC10" + b"x" * (1024 * 1024))
+        assert r.status_code == 413
+        assert "A fájl nagyobb, mint 1 MB." in r.text
+
+
+def test_failed_job_message_is_translated(make_client):
+    with make_client(planner=fake_planner(names=())) as c:
+        job_id = job_id_from(html_upload(c))
+        wait(c, job_id)
+        assert "Nu s-au gasit planse." in c.get(f"/jobs/{job_id}/panel?lang=ro", headers=HX).text
+
+
+def test_unknown_job_page(make_client):
+    with make_client() as c:
+        r = c.get("/jobs/" + "0" * 32 + "?lang=hu")
+        assert r.status_code == 404
+        assert "Ez az export már nem létezik." in r.text
+
+
+def test_upload_without_javascript_redirects_to_the_job_page(make_client):
+    with make_client() as c:
+        r = html_upload(c, headers={})
+        assert r.status_code == 303
+        assert re.fullmatch(r"/jobs/[0-9a-f]{32}", r.headers["location"])
+
+
+def test_delete_returns_the_intro(make_client, tmp_path):
+    with make_client() as c:
+        job_id = job_id_from(html_upload(c))
+        wait(c, job_id)
+        r = c.delete(f"/jobs/{job_id}", headers=HX)
+        assert r.status_code == 200 and r.headers["HX-Push-Url"] == "/"
+        assert "The files were deleted from the server." in r.text
+        assert not (tmp_path / "jobs" / job_id).exists()
+        assert c.get(f"/jobs/{job_id}").status_code == 404
