@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: DWG Sheets VERSION\n"
 "Report-Msgid-Bugs-To: https://github.com/kulcsarrudolf/dwg-sheets-to-pdf/issues\n"
-"POT-Creation-Date: 2026-10-23 15:17+0300\n"
+"POT-Creation-Date: 2026-10-23 15:25+0300\n"
 "PO-Revision-Date: 2026-10-23 15:17+0300\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language: hu\n"
@@ -106,47 +106,56 @@ msgid "Plotting sheets"
 msgstr "Tervlapok plottolása"
 
 #: src/dwg_sheets_to_pdf/web/templates/_job.html:12
+msgid "Done, but some sheets could not be exported."
+msgstr "Kész, de néhány tervlapot nem sikerült exportálni."
+
+#: src/dwg_sheets_to_pdf/web/templates/_job.html:13
 msgid "Done. Every sheet is ready."
 msgstr "Kész. Minden tervlap elkészült."
 
-#: src/dwg_sheets_to_pdf/web/templates/_job.html:16
+#: src/dwg_sheets_to_pdf/web/templates/_job.html:17
 #, python-format
 msgid "%(done)s of %(total)s sheet"
 msgid_plural "%(done)s of %(total)s sheets"
 msgstr[0] "%(done)s / %(total)s tervlap"
 
-#: src/dwg_sheets_to_pdf/web/templates/_job.html:30
+#: src/dwg_sheets_to_pdf/web/templates/_job.html:29
+#, python-format
+msgid "Several sheets share a sheet number: %(list)s. Their files get -1, -2, and so on after the number, in order from left to right on the drawing. You may want to renumber their title blocks."
+msgstr "Több tervlapnak azonos a lapszáma: %(list)s. A fájljaik a szám után -1, -2 stb. jelölést kapnak, a rajzon balról jobbra haladva. Érdemes átszámozni a szövegmezőiket."
+
+#: src/dwg_sheets_to_pdf/web/templates/_job.html:37
 #, python-format
 msgid "%(count)s sheet"
 msgid_plural "%(count)s sheets"
 msgstr[0] "%(count)s tervlap"
 
-#: src/dwg_sheets_to_pdf/web/templates/_job.html:35
-#: src/dwg_sheets_to_pdf/web/templates/_job.html:37
+#: src/dwg_sheets_to_pdf/web/templates/_job.html:42
+#: src/dwg_sheets_to_pdf/web/templates/_job.html:44
 msgid "Download all (ZIP)"
 msgstr "Összes letöltése (ZIP)"
 
-#: src/dwg_sheets_to_pdf/web/templates/_job.html:40
+#: src/dwg_sheets_to_pdf/web/templates/_job.html:47
 msgid "Delete files now"
 msgstr "Fájlok törlése most"
 
-#: src/dwg_sheets_to_pdf/web/templates/_job.html:56
+#: src/dwg_sheets_to_pdf/web/templates/_job.html:63
 msgid "Open"
 msgstr "Megnyitás"
 
-#: src/dwg_sheets_to_pdf/web/templates/_job.html:57
+#: src/dwg_sheets_to_pdf/web/templates/_job.html:64
 msgid "Download"
 msgstr "Letöltés"
 
-#: src/dwg_sheets_to_pdf/web/templates/_job.html:59
+#: src/dwg_sheets_to_pdf/web/templates/_job.html:66
 msgid "Failed"
 msgstr "Sikertelen"
 
-#: src/dwg_sheets_to_pdf/web/templates/_job.html:61
+#: src/dwg_sheets_to_pdf/web/templates/_job.html:68
 msgid "Plotting"
 msgstr "Plottolás"
 
-#: src/dwg_sheets_to_pdf/web/templates/_job.html:71
+#: src/dwg_sheets_to_pdf/web/templates/_job.html:78
 #, python-format
 msgid "Skipped %(name)s: %(reason)s"
 msgstr "Kihagyva: %(name)s (%(reason)s)"

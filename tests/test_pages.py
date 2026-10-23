@@ -112,3 +112,33 @@ def test_delete_returns_the_intro(make_client, tmp_path):
         assert "The files were deleted from the server." in r.text
         assert not (tmp_path / "jobs" / job_id).exists()
         assert c.get(f"/jobs/{job_id}").status_code == 404
+
+
+def test_sheets_sharing_a_number_all_export_and_are_flagged(make_client):
+    with make_client(planner=fake_planner(names=("A04", "A15", "A15", "A15"))) as c:
+        job_id = job_id_from(html_upload(c))
+        job = wait(c, job_id)
+        assert job["status"] == "done" and job["error_code"] is None
+        assert [s["label"] for s in job["sheets"]] == ["A04", "A15-1", "A15-2", "A15-3"]
+        assert len({s["file"] for s in job["sheets"]}) == 4  # no file overwrites another
+        assert all(s["status"] == "done" for s in job["sheets"])
+        assert job["duplicates"] == {"A15": 3}
+
+        panel = c.get(f"/jobs/{job_id}/panel?lang=en", headers=HX).text
+        assert "Done. Every sheet is ready." in panel and "4 of 4 sheets" in panel
+        assert "Several sheets share a sheet number: A15 (3\u00d7)." in panel
+        assert ">A15-3<" in panel
+        assert (
+            "Mai multe planse au acelasi numar: A15 (3\u00d7)."
+            in c.get(f"/jobs/{job_id}/panel?lang=ro", headers=HX).text
+        )
+
+
+def test_partial_failure_says_so(make_client):
+    with make_client(exporter=fake_exporter(fail={"A14"})) as c:
+        job_id = job_id_from(html_upload(c))
+        wait(c, job_id)
+        panel = c.get(f"/jobs/{job_id}/panel?lang=en", headers=HX).text
+        assert "Done, but some sheets could not be exported." in panel
+        assert "Every sheet is ready" not in panel
+        assert "1 of 2 sheets could not be exported." in panel

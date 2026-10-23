@@ -24,6 +24,8 @@
   --accent-soft: light-dark(#e3f0f0, #183a3c);
   --bad:         light-dark(#b3261e, #f2a29b);
   --bad-soft:    light-dark(#fbe9e7, #3a1f1d);
+  --warn:        light-dark(#7a5300, #f0c96a);
+  --warn-soft:   light-dark(#fdf3dc, #33290f);
 
   --display: "Plex Condensed", "Arial Narrow", system-ui, sans-serif;
   --body: "Plex Sans", system-ui, -apple-system, "Segoe UI", sans-serif;
@@ -98,6 +100,7 @@ h1 { margin: 0; font: 600 clamp(28px, 5vw, 40px)/1.1 var(--display); letter-spac
 @keyframes slide { from { transform: translateX(-100%); } to { transform: translateX(340%); } }
 
 .alert { padding: 12px 14px; background: var(--bad-soft); color: var(--bad); border-left: 3px solid var(--bad); }
+.warn { padding: 12px 14px; background: var(--warn-soft); color: var(--warn); border-left: 3px solid var(--warn); }
 .note { margin: 0; color: var(--graphite); }
 
 /* ---- Buttons ---------------------------------------------------------- */

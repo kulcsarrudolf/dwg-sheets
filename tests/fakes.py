@@ -4,7 +4,7 @@ import time
 from pathlib import Path
 
 from dwg_sheets_to_pdf.export import Plan, SheetResult
-from dwg_sheets_to_pdf.sheets import Rect, Sheet, Skipped
+from dwg_sheets_to_pdf.sheets import Rect, Sheet, Skipped, duplicates, labels
 
 PDF = b"%PDF-1.7 fake\n"
 
@@ -12,11 +12,12 @@ PDF = b"%PDF-1.7 fake\n"
 def fake_planner(names=("A13", "A14"), skipped=()):
     def planner(drawing: Path, out_dir: Path, options, stem: str) -> Plan:
         assert drawing.read_bytes().startswith(b"AC10")
-        sheets = [Sheet(n, Rect(0, 0, 42, 29.7), 100.0, double=(i == 0)) for i, n in enumerate(names)]
+        sheets = [Sheet(n, Rect(50 * i, 0, 50 * i + 42, 29.7), 100.0, double=(i == 0)) for i, n in enumerate(names)]
         results = [
-            SheetResult(n, 100.0, (420.0, 297.0), i == 0, out_dir / f"{stem} - {n}.pdf") for i, n in enumerate(names)
+            SheetResult(s.name, 100.0, (420.0, 297.0), s.double, out_dir / f"{stem} - {label}.pdf", label=label)
+            for s, label in zip(sheets, labels(sheets), strict=True)
         ]
-        return Plan(drawing, results, [Skipped(*s) for s in skipped], sheets)
+        return Plan(drawing, results, [Skipped(*s) for s in skipped], sheets, duplicates(sheets))
 
     return planner
 

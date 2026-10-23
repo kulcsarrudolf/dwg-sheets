@@ -9,6 +9,7 @@
         {%- if job.status == "queued" %}{{ _('Waiting for a free slot') }}
         {%- elif job.status == "reading" %}{{ _('Reading the drawing and finding sheets') }}
         {%- elif job.status == "exporting" %}{{ _('Plotting sheets') }}
+        {%- elif job.failed %}{{ _('Done, but some sheets could not be exported.') }}
         {%- else %}{{ _('Done. Every sheet is ready.') }}{% endif -%}
       </span>
       {% if job.total %}
@@ -22,6 +23,12 @@
   {% endif %}
 
   {% if job.error_code %}<div class="alert" role="alert">{{ t.error(job.error_code, job.error_params) }}</div>{% endif %}
+
+  {% if job.duplicates %}
+  <div class="warn">
+    {% trans list=job.duplicates %}Several sheets share a sheet number: {{ list }}. Their files get -1, -2, and so on after the number, in order from left to right on the drawing. You may want to renumber their title blocks.{% endtrans %}
+  </div>
+  {% endif %}
 
   {% if job.sheets %}
   <div class="register">

@@ -70,6 +70,11 @@ def main(argv: list[str] | None = None) -> int:
 
     for s in found.skipped:
         print(f"skip {s.name}: {s.reason}", file=sys.stderr)
+    if found.duplicates:
+        shared = ", ".join(f"{name} ({n} sheets)" for name, n in found.duplicates.items())
+        print(
+            f"warning: several sheets share a number: {shared}. Their files are numbered -1, -2, ...", file=sys.stderr
+        )
     if not found.results:
         print("No sheets found. Check --title-pattern and --units.", file=sys.stderr)
         return 1

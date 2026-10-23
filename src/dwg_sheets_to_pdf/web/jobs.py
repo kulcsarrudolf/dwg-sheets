@@ -39,6 +39,7 @@ class SheetInfo:
     file: str  # file name inside pdf/
     status: str = "pending"  # pending | done | failed
     error: str | None = None
+    label: str = ""  # unique: the number, with -1, -2, ... when several sheets share it
 
 
 @dataclass
@@ -54,6 +55,7 @@ class JobState:
     error_params: dict = field(default_factory=dict)
     sheets: list[SheetInfo] = field(default_factory=list)
     skipped: list[dict] = field(default_factory=list)
+    duplicates: dict[str, int] = field(default_factory=dict)  # sheet numbers several sheets share
 
     def to_json(self) -> dict:
         return asdict(self)
@@ -172,8 +174,11 @@ def run_job(store: JobStore, job_id: str, options: Options, planner: Planner, ex
         drawing = store.input_path(job_id)
         stem = Path(state.drawing).stem
         p = planner(drawing, store.pdf_dir(job_id), options, stem)
-        state.sheets = [SheetInfo(r.name, r.scale, list(r.page_mm), r.double, r.file.name) for r in p.results]
+        state.sheets = [
+            SheetInfo(r.name, r.scale, list(r.page_mm), r.double, r.file.name, label=r.label) for r in p.results
+        ]
         state.skipped = [{"name": s.name, "reason": s.reason, "code": s.code} for s in p.skipped]
+        state.duplicates = dict(p.duplicates)
         if not p.results:
             state.status = "failed"
             state.error = "No sheets found. Each sheet needs a 'PL. NR.' title block inside a rectangular frame."
@@ -183,12 +188,13 @@ def run_job(store: JobStore, job_id: str, options: Options, planner: Planner, ex
         state.status = "exporting"
         store.save(state)
 
-        by_file = {s.file: s for s in state.sheets}
+        # Each result to its own row. Not by name or file: sheets can share a number.
+        info_for = {id(r): info for r, info in zip(p.results, state.sheets, strict=True)}
         progress_lock = threading.Lock()  # sheets finish on several export threads
 
         def on_done(r: SheetResult) -> None:
             with progress_lock:
-                info = by_file[r.file.name]
+                info = info_for[id(r)]
                 info.status = "done" if r.ok else "failed"
                 info.error = r.error
                 store.save(state)

@@ -15,6 +15,7 @@ the left for binding and 10 mm elsewhere, the same as the double frames).
 from __future__ import annotations
 
 import re
+from collections import Counter
 from dataclasses import dataclass, field
 
 Point = tuple[float, float]
@@ -184,8 +185,32 @@ def find_sheets(
         outer_handles = tuple(r.handle for r in rects if double and r.same_box(frame) and r.handle)
         sheets.append(Sheet(name, frame, scale, double, outer_handles))
 
-    sheets.sort(key=lambda s: _natural_key(s.name))
+    # By sheet number, and sheets that share a number in reading order: left to right, then top to bottom.
+    sheets.sort(key=lambda s: (_natural_key(s.name), round(s.frame.x0, 3), -round(s.frame.y1, 3)))
     return sheets, skipped
+
+
+def labels(sheets: list[Sheet]) -> list[str]:
+    """A unique label per sheet: its number, with -1, -2, ... where several sheets share one.
+
+    Drawings often reuse a title block without renumbering it, so two different sheets can both say
+    "A15". Their PDFs need different names, and the reader needs to tell them apart.
+    """
+    counts = Counter(s.name for s in sheets)
+    seen: Counter[str] = Counter()
+    out = []
+    for s in sheets:
+        if counts[s.name] > 1:
+            seen[s.name] += 1
+            out.append(f"{s.name}-{seen[s.name]}")
+        else:
+            out.append(s.name)
+    return out
+
+
+def duplicates(sheets: list[Sheet]) -> dict[str, int]:
+    """Sheet numbers used by more than one sheet, with how many use each."""
+    return {name: n for name, n in Counter(s.name for s in sheets).items() if n > 1}
 
 
 def _inner_border(frame: Rect, rects: list[Rect]) -> Rect | None:

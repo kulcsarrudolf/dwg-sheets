@@ -1,14 +1,14 @@
-# Translations template for DWG Sheets.
+# Translations template for PROJECT.
 # Copyright (C) 2026 ORGANIZATION
-# This file is distributed under the same license as the DWG Sheets project.
+# This file is distributed under the same license as the PROJECT project.
 # FIRST AUTHOR <EMAIL@ADDRESS>, 2026.
 #
 #, fuzzy
 msgid ""
 msgstr ""
-"Project-Id-Version: DWG Sheets VERSION\n"
-"Report-Msgid-Bugs-To: https://github.com/kulcsarrudolf/dwg-sheets-to-pdf/issues\n"
-"POT-Creation-Date: 2026-10-23 15:17+0300\n"
+"Project-Id-Version: PROJECT VERSION\n"
+"Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
+"POT-Creation-Date: 2026-10-23 15:25+0300\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -106,49 +106,58 @@ msgid "Plotting sheets"
 msgstr ""
 
 #: src/dwg_sheets_to_pdf/web/templates/_job.html:12
+msgid "Done, but some sheets could not be exported."
+msgstr ""
+
+#: src/dwg_sheets_to_pdf/web/templates/_job.html:13
 msgid "Done. Every sheet is ready."
 msgstr ""
 
-#: src/dwg_sheets_to_pdf/web/templates/_job.html:16
+#: src/dwg_sheets_to_pdf/web/templates/_job.html:17
 #, python-format
 msgid "%(done)s of %(total)s sheet"
 msgid_plural "%(done)s of %(total)s sheets"
 msgstr[0] ""
 msgstr[1] ""
 
-#: src/dwg_sheets_to_pdf/web/templates/_job.html:30
+#: src/dwg_sheets_to_pdf/web/templates/_job.html:29
+#, python-format
+msgid "Several sheets share a sheet number: %(list)s. Their files get -1, -2, and so on after the number, in order from left to right on the drawing. You may want to renumber their title blocks."
+msgstr ""
+
+#: src/dwg_sheets_to_pdf/web/templates/_job.html:37
 #, python-format
 msgid "%(count)s sheet"
 msgid_plural "%(count)s sheets"
 msgstr[0] ""
 msgstr[1] ""
 
-#: src/dwg_sheets_to_pdf/web/templates/_job.html:35
-#: src/dwg_sheets_to_pdf/web/templates/_job.html:37
+#: src/dwg_sheets_to_pdf/web/templates/_job.html:42
+#: src/dwg_sheets_to_pdf/web/templates/_job.html:44
 msgid "Download all (ZIP)"
 msgstr ""
 
-#: src/dwg_sheets_to_pdf/web/templates/_job.html:40
+#: src/dwg_sheets_to_pdf/web/templates/_job.html:47
 msgid "Delete files now"
 msgstr ""
 
-#: src/dwg_sheets_to_pdf/web/templates/_job.html:56
+#: src/dwg_sheets_to_pdf/web/templates/_job.html:63
 msgid "Open"
 msgstr ""
 
-#: src/dwg_sheets_to_pdf/web/templates/_job.html:57
+#: src/dwg_sheets_to_pdf/web/templates/_job.html:64
 msgid "Download"
 msgstr ""
 
-#: src/dwg_sheets_to_pdf/web/templates/_job.html:59
+#: src/dwg_sheets_to_pdf/web/templates/_job.html:66
 msgid "Failed"
 msgstr ""
 
-#: src/dwg_sheets_to_pdf/web/templates/_job.html:61
+#: src/dwg_sheets_to_pdf/web/templates/_job.html:68
 msgid "Plotting"
 msgstr ""
 
-#: src/dwg_sheets_to_pdf/web/templates/_job.html:71
+#: src/dwg_sheets_to_pdf/web/templates/_job.html:78
 #, python-format
 msgid "Skipped %(name)s: %(reason)s"
 msgstr ""

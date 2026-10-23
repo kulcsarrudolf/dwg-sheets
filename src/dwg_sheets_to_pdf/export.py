@@ -11,7 +11,17 @@ from dataclasses import dataclass, field
 from pathlib import Path
 
 from .cadcraft import CadCraft, CadCraftError
-from .sheets import DEFAULT_MARGINS_MM, DEFAULT_TITLE_PATTERN, Sheet, Skipped, find_sheets, rectangles, safe_filename
+from .sheets import (
+    DEFAULT_MARGINS_MM,
+    DEFAULT_TITLE_PATTERN,
+    Sheet,
+    Skipped,
+    duplicates,
+    find_sheets,
+    labels,
+    rectangles,
+    safe_filename,
+)
 
 
 @dataclass(frozen=True)
@@ -29,6 +39,11 @@ class SheetResult:
     double: bool
     file: Path
     error: str | None = None
+    # Unique among the drawing's sheets: the number, with -1, -2, ... when several sheets share it.
+    label: str = ""
+
+    def __post_init__(self) -> None:
+        self.label = self.label or self.name
 
     @property
     def ok(self) -> bool:
@@ -37,7 +52,7 @@ class SheetResult:
     def describe(self) -> str:
         w, h = self.page_mm
         kind = "double frame, outer line hidden" if self.double else "single frame, margins added"
-        return f"{self.name}: 1:{self.scale:g}, {w:g} x {h:g} mm ({kind})"
+        return f"{self.label}: 1:{self.scale:g}, {w:g} x {h:g} mm ({kind})"
 
 
 @dataclass
@@ -48,6 +63,8 @@ class Plan:
     results: list[SheetResult]
     skipped: list[Skipped]
     sheets: list[Sheet] = field(repr=False)
+    # Sheet numbers that several sheets share, with how many: usually a title block copied without renumbering.
+    duplicates: dict[str, int] = field(default_factory=dict)
 
 
 def plan(cad: CadCraft, drawing: Path, out_dir: Path, options: Options, stem: str | None = None) -> Plan:
@@ -55,11 +72,11 @@ def plan(cad: CadCraft, drawing: Path, out_dir: Path, options: Options, stem: st
     sheets, skipped = find_sheets(rectangles(cad.polylines(drawing)), cad.texts(drawing), options.title_pattern)
     stem = stem or drawing.stem
     results = []
-    for sheet in sheets:
+    for sheet, label in zip(sheets, labels(sheets), strict=True):
         layout = sheet.plot(options.unit_mm, options.margins_mm)
-        out = out_dir / f"{stem} - {safe_filename(sheet.name)}.pdf"
-        results.append(SheetResult(sheet.name, sheet.scale, layout.page_mm, sheet.double, out))
-    return Plan(drawing, results, skipped, sheets)
+        out = out_dir / f"{stem} - {safe_filename(label)}.pdf"
+        results.append(SheetResult(sheet.name, sheet.scale, layout.page_mm, sheet.double, out, label=label))
+    return Plan(drawing, results, skipped, sheets, duplicates(sheets))
 
 
 def export(

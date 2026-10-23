@@ -1,4 +1,4 @@
-from dwg_sheets_to_pdf.sheets import Rect, Sheet, find_sheets, rectangles, safe_filename
+from dwg_sheets_to_pdf.sheets import Rect, Sheet, duplicates, find_sheets, labels, rectangles, safe_filename
 
 
 def pline(points, closed=True, bulge=0.0):
@@ -126,3 +126,16 @@ def test_safe_filename():
     assert safe_filename("A07") == "A07"
     assert safe_filename("A/7: plan") == "A_7_plan"
     assert safe_filename("...") == "sheet"
+
+
+def test_sheets_sharing_a_number_get_labels_in_reading_order():
+    # Three title blocks say A15 (copied without renumbering), placed out of order on the drawing.
+    rects = [Rect(x, 0, x + 9, 9) for x in (0, 20, 40, 60)]
+    texts = []
+    for x, name in ((40, "A15"), (0, "A15"), (20, "A04"), (60, "A15")):
+        texts += [text(f"PL. NR. {name}", x + 5, 5), text("1:100", x + 4, 4)]
+    sheets, _ = find_sheets(rects, texts)
+    assert [(s.name, s.frame.x0) for s in sheets] == [("A04", 20), ("A15", 0), ("A15", 40), ("A15", 60)]
+    assert labels(sheets) == ["A04", "A15-1", "A15-2", "A15-3"]
+    assert duplicates(sheets) == {"A15": 3}
+    assert labels(sheets[:2]) == ["A04", "A15"]  # a number used once keeps its plain name

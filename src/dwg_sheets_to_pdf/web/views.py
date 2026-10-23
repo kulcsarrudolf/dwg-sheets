@@ -103,6 +103,7 @@ def job_view(state: JobState) -> dict:
     """What the job panel shows, worked out once here instead of in the template."""
     sheets = state.sheets
     done = sum(s.status != "pending" for s in sheets)
+    failed = sum(s.status == "failed" for s in sheets)
     max_w = max((s.page_mm[0] for s in sheets), default=1)
     max_h = max((s.page_mm[1] for s in sheets), default=1)
     k = min(OUTLINE_BOX[0] / max_w, OUTLINE_BOX[1] / max_h)
@@ -114,13 +115,15 @@ def job_view(state: JobState) -> dict:
         "error_code": state.error_code,
         "error_params": state.error_params,
         "done": done,
+        "failed": failed,
         "total": len(sheets),
+        "duplicates": ", ".join(f"{name} ({n}\u00d7)" for name, n in state.duplicates.items()),
         "percent": round(100 * done / len(sheets)) if sheets else 0,
         "zip_url": urls(state.id)["zip"] if state.status == "done" else None,
         "skipped": state.skipped,
         "sheets": [
             {
-                "name": s.name,
+                "name": s.label or s.name,
                 "scale": s.scale,
                 "width": s.page_mm[0],
                 "height": s.page_mm[1],
