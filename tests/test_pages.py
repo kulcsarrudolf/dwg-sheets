@@ -3,15 +3,17 @@
 import io
 import re
 import threading
+import zipfile
 
-from fakes import fake_exporter, fake_planner, wait
+from fakes import PNG, fake_exporter, fake_planner, wait
 
 HX = {"HX-Request": "true"}
 
 
-def html_upload(client, name="Project.dwg", data=b"AC1032 drawing", headers=HX, **kw):
+def html_upload(client, name="Project.dwg", data=b"AC1032 drawing", headers=HX, images=None, **kw):
     files = {"file": (name, io.BytesIO(data), "application/octet-stream")}
-    return client.post("/jobs", files=files, headers=headers, follow_redirects=False, **kw)
+    form = {"images": images} if images else None
+    return client.post("/jobs", files=files, data=form, headers=headers, follow_redirects=False, **kw)
 
 
 def job_id_from(response):
@@ -45,7 +47,8 @@ def test_upload_shows_the_job_and_stops_polling_when_done(make_client):
         assert "hx-trigger" not in panel  # finished: no more polling
         assert "Done. Every sheet is ready." in panel
         assert "2 of 2 sheets" in panel and "2 sheets" in panel
-        assert panel.count(f"/api/jobs/{job_id}/pdf/") == 4  # Open and Download for each sheet
+        assert panel.count(f"/api/jobs/{job_id}/files/") == 4  # Open and Download for each sheet
+        assert ">PNG<" not in panel  # no images asked for
         assert f"/api/jobs/{job_id}/zip" in panel
         assert "Skipped A99: no frame around its title block" in panel
         assert "420 &times; 297" in panel
@@ -142,3 +145,36 @@ def test_partial_failure_says_so(make_client):
         assert "Done, but some sheets could not be exported." in panel
         assert "Every sheet is ready" not in panel
         assert "1 of 2 sheets could not be exported." in panel
+
+
+def test_png_images_on_request(make_client):
+    with make_client() as c:
+        job_id = job_id_from(html_upload(c, images="2x"))
+        job = wait(c, job_id)
+        assert job["images"] == "2x"
+        assert [s["png"] for s in job["sheets"]] == ["Project - A13.png", "Project - A14.png"]
+        assert [s["png_dpi"] for s in job["sheets"]] == [300, 300]
+
+        png = c.get(job["sheets"][0]["png_url"] + "?download=1")
+        assert png.status_code == 200 and png.headers["content-type"] == "image/png"
+        assert png.content == PNG
+
+        panel = c.get(f"/jobs/{job_id}/panel", headers=HX).text
+        assert panel.count(">PNG<") == 2 and 'title="300 dpi"' in panel
+        names = zipfile.ZipFile(io.BytesIO(c.get(job["zip_url"]).content)).namelist()
+        assert sorted(names) == ["Project - A13.pdf", "Project - A13.png", "Project - A14.pdf", "Project - A14.png"]
+
+
+def test_unknown_image_choice_is_refused(make_client):
+    with make_client() as c:
+        r = html_upload(c, images="8x")
+        assert r.status_code == 400 and "PDF + PNG 2×" in r.text
+
+
+def test_image_choice_is_remembered_in_the_form(make_client):
+    with make_client() as c:
+        assert 'value="none" checked' in c.get("/").text
+        c.cookies.set("images", "2x")
+        assert 'value="2x" checked' in c.get("/").text
+        c.cookies.set("images", "nonsense")
+        assert 'value="none" checked' in c.get("/").text

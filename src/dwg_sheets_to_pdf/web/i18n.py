@@ -36,6 +36,7 @@ ERRORS = {
     "bad_type": N_("Choose a .dwg or .dxf file."),
     "too_large": N_("The file is larger than %(mb)s MB."),
     "empty": N_("The file is empty."),
+    "bad_images": N_("Choose PDF only, PDF + PNG, or PDF + PNG 2×."),
     "not_found": N_("This export no longer exists. Uploads are deleted after a while, so upload the drawing again."),
     "no_sheets": N_("No sheets found. Each sheet needs a “PL. NR.” title block inside a rectangular frame."),
     "unreadable": N_("The drawing could not be read. Check that it opens in AutoCAD and try again."),

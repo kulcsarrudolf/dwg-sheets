@@ -1,6 +1,6 @@
 {% extends "base.html" %}
 {% block main %}
-  <form class="drop" id="upload" hx-post="/jobs" hx-encoding="multipart/form-data" hx-trigger="change"
+  <form class="drop" id="upload" hx-post="/jobs" hx-encoding="multipart/form-data" hx-trigger="change from:#file"
         hx-target="#job" hx-swap="innerHTML" hx-disabled-elt="#file"
         data-max-bytes="{{ config.max_upload_mb * 1024 * 1024 }}"
         data-too-large="{{ t.error('too_large', {'mb': config.max_upload_mb}) }}"
@@ -11,6 +11,19 @@
       <span class="small">{% trans mb=config.max_upload_mb %}or click to choose one. Up to {{ mb }} MB.{% endtrans %}</span>
     </label>
     <input type="file" id="file" name="file" accept=".dwg,.dxf" required>
+    <fieldset class="output">
+      <legend>{{ _('Output') }}</legend>
+      {% for value, label, hint in [
+          ('none', _('PDF only'), ''),
+          ('standard', _('PDF + PNG'), '150 dpi'),
+          ('2x', _('PDF + PNG 2×'), _('300 dpi, sharper')),
+        ] %}
+      <label class="choice">
+        <input type="radio" name="images" value="{{ value }}" {% if images == value %}checked{% endif %}>
+        <span>{{ label }}{% if hint %} <small>{{ hint }}</small>{% endif %}</span>
+      </label>
+      {% endfor %}
+    </fieldset>
     <div class="bar upload-bar" aria-hidden="true"><span></span></div>
     <noscript><button type="submit" class="btn">{{ _('Upload') }}</button></noscript>
   </form>

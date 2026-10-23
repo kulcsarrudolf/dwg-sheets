@@ -10,6 +10,7 @@ from pathlib import Path
 from . import __version__
 from .cadcraft import CadCraft, CadCraftError
 from .export import Options, export, plan
+from .raster import PNG_QUALITY
 from .sheets import DEFAULT_MARGINS_MM, DEFAULT_TITLE_PATTERN, UNIT_MM
 
 
@@ -50,6 +51,13 @@ def main(argv: list[str] | None = None) -> int:
         default=min(4, os.cpu_count() or 1),
         help="sheets to export in parallel (default: up to 4)",
     )
+    p.add_argument(
+        "--png",
+        nargs="?",
+        const="standard",
+        choices=sorted(PNG_QUALITY),
+        help="also write a PNG of each sheet: 'standard' (150 dpi, the default) or '2x' (300 dpi, sharper)",
+    )
     p.add_argument("--dry-run", action="store_true", help="list the sheets found without exporting")
     p.add_argument("--cadcraft", default="cadcraft-cli", help="path to cadcraft-cli (default: found on PATH)")
     p.add_argument("--version", action="version", version=f"%(prog)s {__version__}")
@@ -59,7 +67,7 @@ def main(argv: list[str] | None = None) -> int:
     if not drawing.is_file():
         p.error(f"no such file: {drawing}")
     out_dir: Path = (args.out or drawing.with_name(f"{drawing.stem} - PDF")).expanduser().resolve()
-    options = Options(UNIT_MM[args.units], args.margins, args.title_pattern)
+    options = Options(UNIT_MM[args.units], args.margins, args.title_pattern, PNG_QUALITY.get(args.png))
 
     try:
         cad = CadCraft(args.cadcraft)
@@ -89,7 +97,8 @@ def main(argv: list[str] | None = None) -> int:
     failures = 0
     for r in results:
         if r.ok:
-            print(f"{r.describe()} -> {r.file.name}")
+            png = f" + {r.png.name} ({r.png_dpi} dpi)" if r.png else ""
+            print(f"{r.describe()} -> {r.file.name}{png}")
         else:
             failures += 1
             print(f"{r.describe()} -> FAILED: {r.error}", file=sys.stderr)

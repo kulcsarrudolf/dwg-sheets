@@ -3,14 +3,16 @@
 from __future__ import annotations
 
 from importlib.resources import files
+from typing import Annotated
 
-from fastapi import APIRouter, Request, UploadFile
+from fastapi import APIRouter, Form, Request, UploadFile
 from fastapi.responses import HTMLResponse, RedirectResponse, Response
 from fastapi.templating import Jinja2Templates
 
+from ..raster import PNG_QUALITY
 from .i18n import COOKIE, LANGUAGES, negotiate, translator
 from .jobs import JobState
-from .service import JobError, JobService, pdf_url, urls
+from .service import JobError, JobService, file_url, urls
 
 _ONE_YEAR = 365 * 24 * 3600
 OUTLINE_BOX = (60, 42)  # px: the largest page outline fits this box; the others use the same scale
@@ -45,6 +47,7 @@ def views_router(service: JobService, settings_view: dict) -> APIRouter:
                 "ngettext": t.ngettext,
                 "_": t.gettext,
                 "config": settings_view,
+                "images": _images_choice(request),
                 **context,
             },
             status_code=status_code,
@@ -77,9 +80,9 @@ def views_router(service: JobService, settings_view: dict) -> APIRouter:
             return render(request, "_error.html", status_code=e.status, error=e)
 
     @router.post("/jobs", response_class=HTMLResponse)
-    async def upload(request: Request, file: UploadFile) -> Response:
+    async def upload(request: Request, file: UploadFile, images: Annotated[str, Form()] = "none") -> Response:
         try:
-            state = await service.start(file)
+            state = await service.start(file, images)
         except JobError as e:
             if is_htmx(request):
                 return render(request, "_error.html", status_code=e.status, error=e)
@@ -129,9 +132,17 @@ def job_view(state: JobState) -> dict:
                 "height": s.page_mm[1],
                 "double": s.double,
                 "status": s.status,
-                "url": pdf_url(state.id, s.file) if s.status == "done" else None,
+                "url": file_url(state.id, s.file) if s.status == "done" else None,
+                "png_url": file_url(state.id, s.png) if s.status == "done" and s.png else None,
+                "png_dpi": s.png_dpi,
                 "outline": (max(4, round(s.page_mm[0] * k)), max(4, round(s.page_mm[1] * k))),
             }
             for s in sheets
         ],
     }
+
+
+def _images_choice(request: Request) -> str:
+    """The reader's last choice of images (set by the page in a cookie), or none."""
+    choice = request.cookies.get("images", "none")
+    return choice if choice in ("none", *PNG_QUALITY) else "none"

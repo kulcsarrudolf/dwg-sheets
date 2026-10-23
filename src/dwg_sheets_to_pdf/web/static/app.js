@@ -19,6 +19,12 @@
   window.addEventListener("dragover", (e) => e.preventDefault());
   window.addEventListener("drop", (e) => e.preventDefault());
 
+  // Remember the chosen output for next time (the form only sends when a file is chosen).
+  form.querySelectorAll('input[name="images"]').forEach((radio) =>
+    radio.addEventListener("change", () => {
+      document.cookie = `images=${radio.value}; path=/; max-age=31536000; samesite=lax`;
+    }));
+
   // Refuse a wrong or too large file before sending it; the server checks again.
   form.addEventListener("htmx:confirm", (e) => {
     const file = input.files[0];

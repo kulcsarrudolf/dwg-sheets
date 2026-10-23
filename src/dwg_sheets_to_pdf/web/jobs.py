@@ -21,11 +21,12 @@ import time
 import uuid
 import zipfile
 from collections.abc import Callable
-from dataclasses import asdict, dataclass, field
+from dataclasses import asdict, dataclass, field, replace
 from pathlib import Path
 
 from ..cadcraft import CadCraftError
 from ..export import Options, Plan, SheetResult
+from ..raster import PNG_QUALITY
 
 JOB_ID = re.compile(r"^[0-9a-f]{32}$")
 
@@ -40,6 +41,8 @@ class SheetInfo:
     status: str = "pending"  # pending | done | failed
     error: str | None = None
     label: str = ""  # unique: the number, with -1, -2, ... when several sheets share it
+    png: str | None = None  # image file name inside pdf/, when images were asked for
+    png_dpi: int | None = None
 
 
 @dataclass
@@ -56,6 +59,7 @@ class JobState:
     sheets: list[SheetInfo] = field(default_factory=list)
     skipped: list[dict] = field(default_factory=list)
     duplicates: dict[str, int] = field(default_factory=dict)  # sheet numbers several sheets share
+    images: str = "none"  # none | standard | 2x: PNG images next to the PDFs (see raster.PNG_QUALITY)
 
     def to_json(self) -> dict:
         return asdict(self)
@@ -83,16 +87,16 @@ class JobStore:
     def pdf_dir(self, job_id: str) -> Path:
         return self.dir(job_id) / "pdf"
 
-    def pdf_path(self, job_id: str, file: str) -> Path:
-        """A PDF of this job, only if the job lists it (so no path from the URL reaches the disk)."""
+    def output_path(self, job_id: str, file: str) -> Path:
+        """A PDF or PNG of this job, only if the job lists it (so no path from the URL reaches the disk)."""
         state = self.load(job_id)
-        if not any(s.file == file and s.status == "done" for s in state.sheets):
+        if not any(file in (s.file, s.png) and s.status == "done" for s in state.sheets):
             raise KeyError(file)
         return self.pdf_dir(job_id) / file
 
     # State -----------------------------------------------------------------
 
-    def create(self, drawing_name: str, write_upload: Callable[[Path], None]) -> JobState:
+    def create(self, drawing_name: str, write_upload: Callable[[Path], None], images: str = "none") -> JobState:
         job_id = uuid.uuid4().hex
         d = self.root / job_id
         (d / "input").mkdir(parents=True)
@@ -101,7 +105,7 @@ class JobStore:
         except BaseException:
             shutil.rmtree(d, ignore_errors=True)
             raise
-        state = JobState(job_id, drawing_name, time.time())
+        state = JobState(job_id, drawing_name, time.time(), images=images)
         self.save(state)
         return state
 
@@ -145,7 +149,7 @@ class JobStore:
     # Downloads -------------------------------------------------------------
 
     def zip_path(self, job_id: str) -> Path:
-        """All exported PDFs in one ZIP, built once the job is done."""
+        """All exported PDFs (and images) in one ZIP, built once the job is done."""
         state = self.load(job_id)
         if state.status != "done":
             raise KeyError(job_id)
@@ -155,7 +159,8 @@ class JobStore:
             with zipfile.ZipFile(tmp, "w", zipfile.ZIP_DEFLATED) as z:
                 for s in state.sheets:
                     if s.status == "done":
-                        z.write(self.pdf_dir(job_id) / s.file, s.file)
+                        for name in filter(None, (s.file, s.png)):
+                            z.write(self.pdf_dir(job_id) / name, name)
             os.replace(tmp, path)
         return path
 
@@ -173,9 +178,19 @@ def run_job(store: JobStore, job_id: str, options: Options, planner: Planner, ex
         store.save(state)
         drawing = store.input_path(job_id)
         stem = Path(state.drawing).stem
+        options = replace(options, png_dpi=PNG_QUALITY.get(state.images))
         p = planner(drawing, store.pdf_dir(job_id), options, stem)
         state.sheets = [
-            SheetInfo(r.name, r.scale, list(r.page_mm), r.double, r.file.name, label=r.label) for r in p.results
+            SheetInfo(
+                r.name,
+                r.scale,
+                list(r.page_mm),
+                r.double,
+                r.file.name,
+                label=r.label,
+                png=r.png.name if r.png else None,
+            )
+            for r in p.results
         ]
         state.skipped = [{"name": s.name, "reason": s.reason, "code": s.code} for s in p.skipped]
         state.duplicates = dict(p.duplicates)
@@ -197,6 +212,7 @@ def run_job(store: JobStore, job_id: str, options: Options, planner: Planner, ex
                 info = info_for[id(r)]
                 info.status = "done" if r.ok else "failed"
                 info.error = r.error
+                info.png_dpi = r.png_dpi
                 store.save(state)
 
         exporter(p, options, on_done)

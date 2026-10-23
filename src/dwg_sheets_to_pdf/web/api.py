@@ -2,19 +2,21 @@
 
 from __future__ import annotations
 
-from fastapi import APIRouter, UploadFile
+from typing import Annotated
+
+from fastapi import APIRouter, Form, UploadFile
 from fastapi.responses import FileResponse, JSONResponse, Response
 
 from .jobs import JobState
-from .service import JobService, pdf_url, urls
+from .service import JobService, file_url, urls
 
 
 def api_router(service: JobService) -> APIRouter:
     router = APIRouter(prefix="/api")
 
     @router.post("/jobs", status_code=202)
-    async def create_job(file: UploadFile) -> JSONResponse:
-        return JSONResponse(_public(await service.start(file)), status_code=202)
+    async def create_job(file: UploadFile, images: Annotated[str, Form()] = "none") -> JSONResponse:
+        return JSONResponse(_public(await service.start(file, images)), status_code=202)
 
     @router.get("/jobs/{job_id}")
     def get_job(job_id: str) -> dict:
@@ -25,11 +27,12 @@ def api_router(service: JobService) -> APIRouter:
         service.delete(job_id)
         return Response(status_code=204)
 
-    @router.get("/jobs/{job_id}/pdf/{file}")
-    def get_pdf(job_id: str, file: str, download: bool = False) -> FileResponse:
+    @router.get("/jobs/{job_id}/files/{file}")
+    def get_file(job_id: str, file: str, download: bool = False) -> FileResponse:
+        path = service.output(job_id, file)
         return FileResponse(
-            service.pdf(job_id, file),
-            media_type="application/pdf",
+            path,
+            media_type="image/png" if path.suffix == ".png" else "application/pdf",
             filename=file,
             content_disposition_type="attachment" if download else "inline",
         )
@@ -46,6 +49,8 @@ def _public(state: JobState) -> dict:
     """Job state with download links."""
     job = state.to_json()
     for s in job["sheets"]:
-        s["url"] = pdf_url(job["id"], s["file"]) if s["status"] == "done" else None
+        done = s["status"] == "done"
+        s["url"] = file_url(job["id"], s["file"]) if done else None
+        s["png_url"] = file_url(job["id"], s["png"]) if done and s["png"] else None
     job["zip_url"] = urls(job["id"])["zip"] if job["status"] == "done" else None
     return job

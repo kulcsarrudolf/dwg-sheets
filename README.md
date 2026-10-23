@@ -32,6 +32,10 @@ Translations are gettext `.po` files; [docs/translations.md](docs/translations.m
 The pages are rendered on the server with Jinja2 and updated in place with [htmx](https://htmx.org/) (pinned, served by the app with the fonts, so nothing loads from other sites).
 Each export has its own address (`/jobs/<id>`), so a reload or a shared link shows the same result while it lives.
 
+Next to the PDFs the page can also make PNG images, for viewers and tools that don't handle vector PDFs well: **PDF + PNG** at 150 dpi, or **PDF + PNG 2×** at 300 dpi.
+The PDFs themselves are vector and sharp at any zoom; the images are drawn from them with PDFium, so they match exactly.
+Very large sheets are drawn at a lower resolution so one image stays under 200 megapixels.
+
 ```sh
 docker compose up -d --build
 ```
@@ -91,6 +95,7 @@ Options:
 | `--units m\|cm\|mm` | Drawing units (default `m`) |
 | `--title-pattern REGEX` | What marks a title block; the first group is the sheet name. Default matches `PL. NR. A07`. Example: `--title-pattern 'Sheet no:\s*(\S+)'` |
 | `--margins L,B,R,T` | Page margins in mm around a single frame (default `20,10,10,10`) |
+| `--png [standard\|2x]` | Also write a PNG image of each sheet: `standard` is 150 dpi, `2x` is 300 dpi |
 | `--dry-run` | List the sheets and page sizes without exporting |
 | `--cadcraft PATH` | Path to `cadcraft-cli` if it is not on `PATH` |
 

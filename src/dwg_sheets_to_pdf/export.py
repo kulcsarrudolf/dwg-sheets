@@ -11,6 +11,7 @@ from dataclasses import dataclass, field
 from pathlib import Path
 
 from .cadcraft import CadCraft, CadCraftError
+from .raster import pdf_to_png
 from .sheets import (
     DEFAULT_MARGINS_MM,
     DEFAULT_TITLE_PATTERN,
@@ -29,6 +30,7 @@ class Options:
     unit_mm: float = 1000.0  # drawing units are metres
     margins_mm: tuple[float, float, float, float] = DEFAULT_MARGINS_MM
     title_pattern: str = DEFAULT_TITLE_PATTERN
+    png_dpi: int | None = None  # also write a PNG of each sheet at this resolution
 
 
 @dataclass
@@ -41,6 +43,8 @@ class SheetResult:
     error: str | None = None
     # Unique among the drawing's sheets: the number, with -1, -2, ... when several sheets share it.
     label: str = ""
+    png: Path | None = None  # where the PNG goes, when images were asked for
+    png_dpi: int | None = None  # the resolution it was drawn at (lower than asked for very large sheets)
 
     def __post_init__(self) -> None:
         self.label = self.label or self.name
@@ -75,7 +79,8 @@ def plan(cad: CadCraft, drawing: Path, out_dir: Path, options: Options, stem: st
     for sheet, label in zip(sheets, labels(sheets), strict=True):
         layout = sheet.plot(options.unit_mm, options.margins_mm)
         out = out_dir / f"{stem} - {safe_filename(label)}.pdf"
-        results.append(SheetResult(sheet.name, sheet.scale, layout.page_mm, sheet.double, out, label=label))
+        png = out.with_suffix(".png") if options.png_dpi else None
+        results.append(SheetResult(sheet.name, sheet.scale, layout.page_mm, sheet.double, out, label=label, png=png))
     return Plan(drawing, results, skipped, sheets, duplicates(sheets))
 
 
@@ -103,6 +108,11 @@ def export(
             )
         except CadCraftError as e:
             result.error = str(e)
+        if result.ok and result.png and options.png_dpi:
+            try:
+                result.png_dpi = pdf_to_png(result.file, result.png, options.png_dpi)
+            except Exception as e:  # PDFium reports problems with its own exception types
+                result.error = f"PNG: {e}"
         if on_done:
             on_done(result)
         return result

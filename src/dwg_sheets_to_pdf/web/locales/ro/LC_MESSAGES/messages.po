@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: DWG Sheets VERSION\n"
 "Report-Msgid-Bugs-To: https://github.com/kulcsarrudolf/dwg-sheets-to-pdf/issues\n"
-"POT-Creation-Date: 2026-10-23 15:25+0300\n"
+"POT-Creation-Date: 2026-10-23 15:36+0300\n"
 "PO-Revision-Date: 2026-10-23 15:17+0300\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language: ro\n"
@@ -32,34 +32,38 @@ msgid "The file is empty."
 msgstr "Fisierul este gol."
 
 #: src/dwg_sheets_to_pdf/web/i18n.py:39
+msgid "Choose PDF only, PDF + PNG, or PDF + PNG 2×."
+msgstr "Alegeti doar PDF, PDF + PNG sau PDF + PNG 2×."
+
+#: src/dwg_sheets_to_pdf/web/i18n.py:40
 msgid "This export no longer exists. Uploads are deleted after a while, so upload the drawing again."
 msgstr "Acest export nu mai exista. Fisierele incarcate se sterg dupa un timp, deci incarcati din nou desenul."
 
-#: src/dwg_sheets_to_pdf/web/i18n.py:40
+#: src/dwg_sheets_to_pdf/web/i18n.py:41
 msgid "No sheets found. Each sheet needs a “PL. NR.” title block inside a rectangular frame."
 msgstr "Nu s-au gasit planse. Fiecare plansa are nevoie de un cartus „PL. NR.” intr-un chenar dreptunghiular."
 
-#: src/dwg_sheets_to_pdf/web/i18n.py:41
+#: src/dwg_sheets_to_pdf/web/i18n.py:42
 msgid "The drawing could not be read. Check that it opens in AutoCAD and try again."
 msgstr "Desenul nu a putut fi citit. Verificati ca se deschide in AutoCAD si incercati din nou."
 
-#: src/dwg_sheets_to_pdf/web/i18n.py:42
+#: src/dwg_sheets_to_pdf/web/i18n.py:43
 msgid "Something went wrong while exporting. Try again."
 msgstr "A aparut o eroare la export. Incercati din nou."
 
-#: src/dwg_sheets_to_pdf/web/i18n.py:45
+#: src/dwg_sheets_to_pdf/web/i18n.py:46
 msgid "no frame around its title block"
 msgstr "nu are chenar in jurul cartusului"
 
-#: src/dwg_sheets_to_pdf/web/i18n.py:46
+#: src/dwg_sheets_to_pdf/web/i18n.py:47
 msgid "no 1:N scale inside its frame"
 msgstr "nu are scara 1:N in chenar"
 
-#: src/dwg_sheets_to_pdf/web/i18n.py:47
+#: src/dwg_sheets_to_pdf/web/i18n.py:48
 msgid "the scale in its title block is not valid"
 msgstr "scara din cartus nu este valida"
 
-#: src/dwg_sheets_to_pdf/web/i18n.py:72
+#: src/dwg_sheets_to_pdf/web/i18n.py:73
 #, python-format
 msgid "%(failed)s of %(total)s sheet could not be exported."
 msgid_plural "%(failed)s of %(total)s sheets could not be exported."
@@ -153,15 +157,15 @@ msgstr "Deschide"
 msgid "Download"
 msgstr "Descarca"
 
-#: src/dwg_sheets_to_pdf/web/templates/_job.html:66
+#: src/dwg_sheets_to_pdf/web/templates/_job.html:67
 msgid "Failed"
 msgstr "Esuat"
 
-#: src/dwg_sheets_to_pdf/web/templates/_job.html:68
+#: src/dwg_sheets_to_pdf/web/templates/_job.html:69
 msgid "Plotting"
 msgstr "Se ploteaza"
 
-#: src/dwg_sheets_to_pdf/web/templates/_job.html:78
+#: src/dwg_sheets_to_pdf/web/templates/_job.html:79
 #, python-format
 msgid "Skipped %(name)s: %(reason)s"
 msgstr "Omisa %(name)s: %(reason)s"
@@ -194,6 +198,26 @@ msgid "or click to choose one. Up to %(mb)s MB."
 msgstr "sau faceti clic pentru a alege unul. Maximum %(mb)s MB."
 
 #: src/dwg_sheets_to_pdf/web/templates/index.html:15
+msgid "Output"
+msgstr "Rezultat"
+
+#: src/dwg_sheets_to_pdf/web/templates/index.html:17
+msgid "PDF only"
+msgstr "Doar PDF"
+
+#: src/dwg_sheets_to_pdf/web/templates/index.html:18
+msgid "PDF + PNG"
+msgstr "PDF + PNG"
+
+#: src/dwg_sheets_to_pdf/web/templates/index.html:19
+msgid "PDF + PNG 2×"
+msgstr "PDF + PNG 2×"
+
+#: src/dwg_sheets_to_pdf/web/templates/index.html:19
+msgid "300 dpi, sharper"
+msgstr "300 dpi, mai clar"
+
+#: src/dwg_sheets_to_pdf/web/templates/index.html:28
 msgid "Upload"
 msgstr "Incarca"
 

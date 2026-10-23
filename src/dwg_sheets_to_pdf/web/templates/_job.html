@@ -62,6 +62,7 @@
           {% if s.url %}
           <a class="btn" href="{{ s.url }}" target="_blank" rel="noopener">{{ _('Open') }}</a>
           <a class="btn" href="{{ s.url }}?download=1">{{ _('Download') }}</a>
+          {% if s.png_url %}<a class="btn" href="{{ s.png_url }}?download=1" title="{{ s.png_dpi }} dpi">PNG</a>{% endif %}
           {% elif s.status == "failed" %}
           <span class="state failed">{{ _('Failed') }}</span>
           {% else %}

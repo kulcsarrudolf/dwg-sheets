@@ -1,11 +1,11 @@
 [project]
 name = "dwg-sheets-to-pdf"
-version = "0.5.1"
+version = "0.6.0"
 description = "Export every sheet drawn in model space of a DWG/DXF to its own PDF, at true scale, using CADCraft."
 readme = "README.md"
 license = "MIT"
 requires-python = ">=3.10"
-dependencies = []
+dependencies = ["pypdfium2>=4.30", "pillow>=10"]
 
 [project.optional-dependencies]
 web = ["fastapi>=0.115", "uvicorn[standard]>=0.30", "python-multipart>=0.0.9", "jinja2>=3.1", "babel>=2.16"]

@@ -10,6 +10,7 @@ from pathlib import Path
 from fastapi import UploadFile
 
 from ..export import Options
+from ..raster import PNG_QUALITY
 from .jobs import Exporter, JobState, JobStore, Planner, run_job
 from .settings import Settings
 
@@ -41,8 +42,13 @@ class JobService:
         self.options = Options()
         self.pool = ThreadPoolExecutor(max_workers=settings.max_concurrent_jobs, thread_name_prefix="job")
 
-    async def start(self, file: UploadFile) -> JobState:
-        """Save an upload and queue its export. The export runs in the background."""
+    async def start(self, file: UploadFile, images: str = "none") -> JobState:
+        """Save an upload and queue its export. The export runs in the background.
+
+        `images` asks for PNG images next to the PDFs: none, standard (150 dpi) or 2x (300 dpi).
+        """
+        if images not in ("none", *PNG_QUALITY):
+            raise JobError(400, "bad_images", f"images must be none, {', '.join(PNG_QUALITY)}.")
         name = Path(file.filename or "").name
         if Path(name).suffix.lower() not in ALLOWED_SUFFIXES:
             raise JobError(400, "bad_type", "Upload a .dwg or .dxf file.")
@@ -60,7 +66,7 @@ class JobService:
                 raise JobError(400, "empty", "The file is empty.")
 
         try:
-            state = await asyncio.to_thread(self.store.create, name, write_upload)
+            state = await asyncio.to_thread(self.store.create, name, write_upload, images)
         except _TooLarge:
             mb = self.settings.max_upload_mb
             raise JobError(413, "too_large", f"The file is larger than {mb} MB.", mb=mb) from None
@@ -79,9 +85,10 @@ class JobService:
         self.get(job_id)
         self.store.delete(job_id)
 
-    def pdf(self, job_id: str, file: str) -> Path:
+    def output(self, job_id: str, file: str) -> Path:
+        """A finished PDF or PNG of the job."""
         try:
-            return self.store.pdf_path(job_id, file)
+            return self.store.output_path(job_id, file)
         except KeyError:
             raise JobError(404, "not_found", "Not found.") from None
 
@@ -102,5 +109,5 @@ def urls(job_id: str) -> dict[str, str]:
     return {"base": base, "zip": f"{base}/zip"}
 
 
-def pdf_url(job_id: str, file: str) -> str:
-    return f"/api/jobs/{job_id}/pdf/{file}"
+def file_url(job_id: str, file: str) -> str:
+    return f"/api/jobs/{job_id}/files/{file}"

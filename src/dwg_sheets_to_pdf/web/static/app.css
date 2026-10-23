@@ -80,11 +80,23 @@ h1 { margin: 0; font: 600 clamp(28px, 5vw, 40px)/1.1 var(--display); letter-spac
 }
 .drop:hover::before, .drop:focus-within::before, .drop.over::before { border-color: var(--accent); }
 .drop.over { background: var(--accent-soft); }
-.drop-label { display: grid; place-content: center; gap: 8px; padding: 32px 24px; text-align: center; cursor: pointer; }
+.drop-label { display: grid; place-content: center; gap: 8px; padding: 32px 24px 18px; text-align: center; cursor: pointer; }
 .drop .big { font: 600 20px/1.2 var(--display); }
 .drop .small { color: var(--graphite); font-size: 13px; }
 .drop input[type="file"] { position: absolute; width: 1px; height: 1px; opacity: 0; pointer-events: none; }
 .drop.uploading { cursor: progress; }
+
+/* Output choice: three plain options along the bottom of the drop zone. */
+.output {
+  position: relative;
+  display: flex; flex-wrap: wrap; justify-content: center; gap: 6px 20px;
+  margin: 0; padding: 0 32px 24px 44px;
+  border: 0;
+}
+.output legend { float: left; margin-right: 4px; color: var(--graphite); font: 500 12px/1.9 var(--mono); letter-spacing: .06em; text-transform: uppercase; }
+.choice { display: inline-flex; align-items: center; gap: 6px; font-size: 14px; cursor: pointer; }
+.choice input { accent-color: var(--accent); margin: 0; }
+.choice small { color: var(--graphite); font-size: 12px; }
 .upload-bar { position: absolute; inset: auto 0 0 0; visibility: hidden; }
 .drop.uploading .upload-bar { visibility: visible; }
 
