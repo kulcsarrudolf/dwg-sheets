@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from typing import Annotated
 
-from fastapi import APIRouter, Form, UploadFile
+from fastapi import APIRouter, Form, Query, UploadFile
 from fastapi.responses import FileResponse, JSONResponse, Response
 
 from .jobs import JobState
@@ -32,17 +32,23 @@ def api_router(service: JobService) -> APIRouter:
         path = service.output(job_id, file)
         return FileResponse(
             path,
-            media_type="image/png" if path.suffix == ".png" else "application/pdf",
+            media_type=_MEDIA_TYPES.get(path.suffix, "application/pdf"),
             filename=file,
             content_disposition_type="attachment" if download else "inline",
+            # A job's files never change once written, so the browser can keep them while the page refreshes.
+            headers={"Cache-Control": "private, max-age=3600, immutable"},
         )
 
     @router.get("/jobs/{job_id}/zip")
-    def get_zip(job_id: str) -> FileResponse:
-        path, name = service.zip(job_id)
+    def get_zip(job_id: str, sheet: Annotated[list[int] | None, Query()] = None) -> FileResponse:
+        """Every sheet, or only the ones given by their position in the job's list: ?sheet=0&sheet=3."""
+        path, name = service.zip(job_id, sheet)
         return FileResponse(path, media_type="application/zip", filename=name)
 
     return router
+
+
+_MEDIA_TYPES = {".pdf": "application/pdf", ".png": "image/png", ".webp": "image/webp"}
 
 
 def _public(state: JobState) -> dict:
@@ -52,5 +58,6 @@ def _public(state: JobState) -> dict:
         done = s["status"] == "done"
         s["url"] = file_url(job["id"], s["file"]) if done else None
         s["png_url"] = file_url(job["id"], s["png"]) if done and s["png"] else None
+        s["thumb_url"] = file_url(job["id"], s["thumb"]) if done and s["thumb"] else None
     job["zip_url"] = urls(job["id"])["zip"] if job["status"] == "done" else None
     return job

@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PROJECT VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2026-10-23 15:36+0300\n"
+"POT-Creation-Date: 2026-10-23 15:45+0300\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -97,71 +97,110 @@ msgstr ""
 msgid "A double border uses its outer line as the paper edge. A single border gets 20 mm binding and 10 mm margins."
 msgstr ""
 
-#: src/dwg_sheets_to_pdf/web/templates/_job.html:9
+#: src/dwg_sheets_to_pdf/web/templates/_job.html:12
 msgid "Waiting for a free slot"
 msgstr ""
 
-#: src/dwg_sheets_to_pdf/web/templates/_job.html:10
+#: src/dwg_sheets_to_pdf/web/templates/_job.html:13
 msgid "Reading the drawing and finding sheets"
 msgstr ""
 
-#: src/dwg_sheets_to_pdf/web/templates/_job.html:11
+#: src/dwg_sheets_to_pdf/web/templates/_job.html:14
 msgid "Plotting sheets"
 msgstr ""
 
-#: src/dwg_sheets_to_pdf/web/templates/_job.html:12
+#: src/dwg_sheets_to_pdf/web/templates/_job.html:15
 msgid "Done, but some sheets could not be exported."
 msgstr ""
 
-#: src/dwg_sheets_to_pdf/web/templates/_job.html:13
+#: src/dwg_sheets_to_pdf/web/templates/_job.html:16
 msgid "Done. Every sheet is ready."
 msgstr ""
 
-#: src/dwg_sheets_to_pdf/web/templates/_job.html:17
+#: src/dwg_sheets_to_pdf/web/templates/_job.html:20
 #, python-format
 msgid "%(done)s of %(total)s sheet"
 msgid_plural "%(done)s of %(total)s sheets"
 msgstr[0] ""
 msgstr[1] ""
 
-#: src/dwg_sheets_to_pdf/web/templates/_job.html:29
+#: src/dwg_sheets_to_pdf/web/templates/_job.html:32
 #, python-format
 msgid "Several sheets share a sheet number: %(list)s. Their files get -1, -2, and so on after the number, in order from left to right on the drawing. You may want to renumber their title blocks."
 msgstr ""
 
-#: src/dwg_sheets_to_pdf/web/templates/_job.html:37
+#: src/dwg_sheets_to_pdf/web/templates/_job.html:41
 #, python-format
 msgid "%(count)s sheet"
 msgid_plural "%(count)s sheets"
 msgstr[0] ""
 msgstr[1] ""
 
-#: src/dwg_sheets_to_pdf/web/templates/_job.html:42
-#: src/dwg_sheets_to_pdf/web/templates/_job.html:44
+#: src/dwg_sheets_to_pdf/web/templates/_job.html:47
+msgid "Select all"
+msgstr ""
+
+#: src/dwg_sheets_to_pdf/web/templates/_job.html:50
+#: src/dwg_sheets_to_pdf/web/templates/_job.html:52
 msgid "Download all (ZIP)"
 msgstr ""
 
-#: src/dwg_sheets_to_pdf/web/templates/_job.html:47
+#: src/dwg_sheets_to_pdf/web/templates/_job.html:55
 msgid "Delete files now"
 msgstr ""
 
-#: src/dwg_sheets_to_pdf/web/templates/_job.html:63
-msgid "Open"
+#: src/dwg_sheets_to_pdf/web/templates/_job.html:68
+msgid "Open PDF"
 msgstr ""
 
-#: src/dwg_sheets_to_pdf/web/templates/_job.html:64
-msgid "Download"
-msgstr ""
-
-#: src/dwg_sheets_to_pdf/web/templates/_job.html:67
+#: src/dwg_sheets_to_pdf/web/templates/_job.html:70
 msgid "Failed"
 msgstr ""
 
-#: src/dwg_sheets_to_pdf/web/templates/_job.html:69
+#: src/dwg_sheets_to_pdf/web/templates/_job.html:72
 msgid "Plotting"
 msgstr ""
 
-#: src/dwg_sheets_to_pdf/web/templates/_job.html:79
+#: src/dwg_sheets_to_pdf/web/templates/_job.html:77
+msgid "Select"
+msgstr ""
+
+#: src/dwg_sheets_to_pdf/web/templates/_job.html:80
+#, python-format
+msgid "Select %(name)s"
+msgstr ""
+
+#: src/dwg_sheets_to_pdf/web/templates/_job.html:98
+msgid "Download PDF"
+msgstr ""
+
+#: src/dwg_sheets_to_pdf/web/templates/_job.html:98
+#, python-format
+msgid "Download %(name)s as PDF"
+msgstr ""
+
+#: src/dwg_sheets_to_pdf/web/templates/_job.html:101
+msgid "Download PNG"
+msgstr ""
+
+#: src/dwg_sheets_to_pdf/web/templates/_job.html:101
+#, python-format
+msgid "Download %(name)s as PNG"
+msgstr ""
+
+#: src/dwg_sheets_to_pdf/web/templates/_job.html:111
+msgid "Selected"
+msgstr ""
+
+#: src/dwg_sheets_to_pdf/web/templates/_job.html:112
+msgid "Clear"
+msgstr ""
+
+#: src/dwg_sheets_to_pdf/web/templates/_job.html:113
+msgid "Download selected (ZIP)"
+msgstr ""
+
+#: src/dwg_sheets_to_pdf/web/templates/_job.html:119
 #, python-format
 msgid "Skipped %(name)s: %(reason)s"
 msgstr ""

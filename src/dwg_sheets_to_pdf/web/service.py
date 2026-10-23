@@ -10,7 +10,7 @@ from pathlib import Path
 from fastapi import UploadFile
 
 from ..export import Options
-from ..raster import PNG_QUALITY
+from ..raster import PNG_QUALITY, THUMB_BOX
 from .jobs import Exporter, JobState, JobStore, Planner, run_job
 from .settings import Settings
 
@@ -39,7 +39,7 @@ class JobService:
         self.store = store
         self.planner = planner
         self.exporter = exporter
-        self.options = Options()
+        self.options = Options(thumb_box=THUMB_BOX)  # the page shows a preview of each sheet
         self.pool = ThreadPoolExecutor(max_workers=settings.max_concurrent_jobs, thread_name_prefix="job")
 
     async def start(self, file: UploadFile, images: str = "none") -> JobState:
@@ -86,19 +86,24 @@ class JobService:
         self.store.delete(job_id)
 
     def output(self, job_id: str, file: str) -> Path:
-        """A finished PDF or PNG of the job."""
+        """A finished PDF, PNG or preview of the job."""
         try:
             return self.store.output_path(job_id, file)
         except KeyError:
             raise JobError(404, "not_found", "Not found.") from None
 
-    def zip(self, job_id: str) -> tuple[Path, str]:
-        """The ZIP of all PDFs and the name to download it as."""
+    def zip(self, job_id: str, only: list[int] | None = None) -> tuple[Path, str]:
+        """The ZIP of all PDFs, or of the sheets at the positions in `only`, and the name to download it as."""
         try:
             state = self.store.load(job_id)
-            return self.store.zip_path(job_id), f"{Path(state.drawing).stem} - PDF.zip"
+            path = self.store.zip_path(job_id, only)
         except KeyError:
             raise JobError(404, "not_found", "Not found, or not finished yet.") from None
+        stem = Path(state.drawing).stem
+        if only is None:
+            return path, f"{stem} - PDF.zip"
+        count = sum(1 for i in set(only) if 0 <= i < len(state.sheets) and state.sheets[i].status == "done")
+        return path, f"{stem} - PDF ({count}).zip"
 
     def shutdown(self) -> None:
         self.pool.shutdown(wait=False, cancel_futures=True)

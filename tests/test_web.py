@@ -4,7 +4,7 @@ import time
 import zipfile
 
 import pytest
-from fakes import PDF, fake_exporter, fake_planner, wait
+from fakes import PDF, WEBP, fake_exporter, fake_planner, wait
 
 from dwg_sheets_to_pdf.cadcraft import CadCraftError
 from dwg_sheets_to_pdf.web.settings import Settings
@@ -139,3 +139,38 @@ def test_settings_from_env(tmp_path):
     )
     assert (s.work_dir, s.max_upload_mb, s.job_ttl_minutes, s.password) == (tmp_path, 5, 9, "pw")
     assert Settings.from_env({"WORK_DIR": str(tmp_path)}).password is None
+
+
+def test_previews_are_served_but_not_zipped(make_client):
+    with make_client() as c:
+        job = wait(c, upload(c).json()["id"])
+        s = job["sheets"][0]
+        assert s["thumb"] == "Project - A13.preview.webp"
+        r = c.get(s["thumb_url"])
+        assert r.status_code == 200 and r.content == WEBP
+        assert r.headers["content-type"] == "image/webp"
+        assert "max-age" in r.headers["cache-control"]
+        names = zipfile.ZipFile(io.BytesIO(c.get(job["zip_url"]).content)).namelist()
+        assert not any(n.endswith(".webp") for n in names)
+
+
+def test_zip_of_selected_sheets(make_client):
+    with make_client(planner=fake_planner(names=("A13", "A14", "A15"))) as c:
+        job = wait(c, upload(c).json()["id"])
+        z = c.get(job["zip_url"], params={"sheet": [2, 0, 2]})
+        assert z.status_code == 200
+        assert z.headers["content-disposition"] == "attachment; filename*=utf-8''Project%20-%20PDF%20%282%29.zip"
+        assert sorted(zipfile.ZipFile(io.BytesIO(z.content)).namelist()) == ["Project - A13.pdf", "Project - A15.pdf"]
+
+        # Indices that are out of range are ignored; none left is not found.
+        assert c.get(job["zip_url"], params={"sheet": [1, 99]}).status_code == 200
+        assert c.get(job["zip_url"], params={"sheet": [99]}).status_code == 404
+        assert c.get(job["zip_url"], params={"sheet": ["x"]}).status_code == 422
+
+
+def test_zip_of_selected_sheets_skips_failed_ones(make_client):
+    with make_client(exporter=fake_exporter(fail={"A14"})) as c:
+        job = wait(c, upload(c).json()["id"])
+        z = c.get(job["zip_url"], params={"sheet": [0, 1]})
+        assert zipfile.ZipFile(io.BytesIO(z.content)).namelist() == ["Project - A13.pdf"]
+        assert c.get(job["zip_url"], params={"sheet": [1]}).status_code == 404
