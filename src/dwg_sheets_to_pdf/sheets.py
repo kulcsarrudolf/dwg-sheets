@@ -111,6 +111,7 @@ class Sheet:
 class Skipped:
     name: str
     reason: str
+    code: str = ""  # stable id for the reason (no_frame, no_scale, bad_scale), for translated messages
 
 
 def rectangles(entities: list[dict]) -> list[Rect]:
@@ -168,16 +169,16 @@ def find_sheets(
         others = [p for j, (_, p) in enumerate(titles) if j != i]
         frames = [r for r in rects if r.contains(at) and not any(r.contains(o) for o in others)]
         if not frames:
-            skipped.append(Skipped(name, "no frame around its title block"))
+            skipped.append(Skipped(name, "no frame around its title block", "no_frame"))
             continue
         frame = max(frames, key=lambda r: r.area)
         inside = [(n, p) for n, p in scales if frame.contains(p)]
         if not inside:
-            skipped.append(Skipped(name, "no 1:N scale inside its frame"))
+            skipped.append(Skipped(name, "no 1:N scale inside its frame", "no_scale"))
             continue
         scale = min(inside, key=lambda s: _dist2(s[1], at))[0]
         if scale <= 0:
-            skipped.append(Skipped(name, f"invalid scale 1:{scale:g}"))
+            skipped.append(Skipped(name, f"invalid scale 1:{scale:g}", "bad_scale"))
             continue
         double = _inner_border(frame, rects) is not None
         outer_handles = tuple(r.handle for r in rects if double and r.same_box(frame) and r.handle)

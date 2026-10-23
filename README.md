@@ -26,6 +26,7 @@ Sheets without a frame or a scale are skipped and listed, so nothing is silently
 ## Web app (Docker)
 
 Upload a drawing in the browser, watch its sheets plot, and download them one by one or as a ZIP.
+The page is in English, Romanian and Hungarian: it follows the browser's language, remembers the reader's choice, and takes `?lang=en|ro|hu` in links.
 
 ```sh
 docker compose up -d --build

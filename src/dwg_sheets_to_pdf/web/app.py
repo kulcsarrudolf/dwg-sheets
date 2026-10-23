@@ -90,7 +90,7 @@ def create_app(
     async def create_job(file: UploadFile) -> JSONResponse:
         name = Path(file.filename or "").name
         if Path(name).suffix.lower() not in ALLOWED_SUFFIXES:
-            raise HTTPException(400, "Upload a .dwg or .dxf file.")
+            raise _error(400, "bad_type", "Upload a .dwg or .dxf file.")
         limit = settings.max_upload_mb * 1024 * 1024
 
         def write_upload(dest: Path) -> None:
@@ -102,12 +102,14 @@ def create_app(
                         raise UploadTooLarge
                     out.write(chunk)
             if size == 0:
-                raise HTTPException(400, "The file is empty.")
+                raise _error(400, "empty", "The file is empty.")
 
         try:
             state = await asyncio.to_thread(store.create, name, write_upload)
         except UploadTooLarge:
-            raise HTTPException(413, f"The file is larger than {settings.max_upload_mb} MB.") from None
+            raise _error(
+                413, "too_large", f"The file is larger than {settings.max_upload_mb} MB.", mb=settings.max_upload_mb
+            ) from None
         jobs_pool.submit(partial(run_job, store, state.id, options, planner, exporter))
         return JSONResponse(_public(state.to_json()), status_code=202)
 
@@ -126,7 +128,7 @@ def create_app(
         try:
             path = store.pdf_path(job_id, file)
         except KeyError:
-            raise HTTPException(404, "Not found.") from None
+            raise _error(404, "not_found", "Not found.") from None
         disposition = "attachment" if download else "inline"
         return FileResponse(path, media_type="application/pdf", filename=file, content_disposition_type=disposition)
 
@@ -136,7 +138,7 @@ def create_app(
             state = store.load(job_id)
             path = store.zip_path(job_id)
         except KeyError:
-            raise HTTPException(404, "Not found, or not finished yet.") from None
+            raise _error(404, "not_found", "Not found, or not finished yet.") from None
         return FileResponse(path, media_type="application/zip", filename=f"{Path(state.drawing).stem} - PDF.zip")
 
     app.state.store = store
@@ -147,7 +149,12 @@ def _load(store: JobStore, job_id: str):
     try:
         return store.load(job_id)
     except KeyError:
-        raise HTTPException(404, "Not found. Jobs are deleted after a while; upload the drawing again.") from None
+        raise _error(404, "not_found", "Not found. Jobs are deleted after a while; upload the drawing again.") from None
+
+
+def _error(status: int, code: str, message: str, **params) -> HTTPException:
+    """An HTTP error the page can translate: `code` and `params` pick and fill its own message."""
+    return HTTPException(status, detail={"code": code, "message": message, "params": params})
 
 
 def _public(job: dict) -> dict:

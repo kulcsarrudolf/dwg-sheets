@@ -47,7 +47,11 @@ class JobState:
     drawing: str
     created: float
     status: str = "queued"  # queued | reading | exporting | done | failed
-    error: str | None = None
+    error: str | None = None  # English message, for API users
+    # Stable id and values for the message, so the page can show it in the reader's language:
+    # no_sheets, unreadable, partial {failed, total}, unexpected
+    error_code: str | None = None
+    error_params: dict = field(default_factory=dict)
     sheets: list[SheetInfo] = field(default_factory=list)
     skipped: list[dict] = field(default_factory=list)
 
@@ -169,10 +173,11 @@ def run_job(store: JobStore, job_id: str, options: Options, planner: Planner, ex
         stem = Path(state.drawing).stem
         p = planner(drawing, store.pdf_dir(job_id), options, stem)
         state.sheets = [SheetInfo(r.name, r.scale, list(r.page_mm), r.double, r.file.name) for r in p.results]
-        state.skipped = [{"name": s.name, "reason": s.reason} for s in p.skipped]
+        state.skipped = [{"name": s.name, "reason": s.reason, "code": s.code} for s in p.skipped]
         if not p.results:
             state.status = "failed"
             state.error = "No sheets found. Each sheet needs a 'PL. NR.' title block inside a rectangular frame."
+            state.error_code = "no_sheets"
             store.save(state)
             return
         state.status = "exporting"
@@ -193,12 +198,16 @@ def run_job(store: JobStore, job_id: str, options: Options, planner: Planner, ex
         state.status = "done" if len(failed) < len(state.sheets) else "failed"
         if failed:
             state.error = f"{len(failed)} of {len(state.sheets)} sheet(s) could not be exported."
+            state.error_code = "partial"
+            state.error_params = {"failed": len(failed), "total": len(state.sheets)}
     except CadCraftError as e:
         state.status = "failed"
         state.error = f"The drawing could not be read: {e}"
+        state.error_code = "unreadable"
     except Exception as e:  # keep the job readable for the browser whatever went wrong
         state.status = "failed"
         state.error = f"Unexpected error: {e}"
+        state.error_code = "unexpected"
     store.save(state)
 
 
