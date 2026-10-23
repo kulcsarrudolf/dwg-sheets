@@ -1,6 +1,6 @@
 [project]
 name = "dwg-sheets-to-pdf"
-version = "0.1.0"
+version = "0.1.1"
 description = "Export every sheet drawn in model space of a DWG/DXF to its own PDF, at true scale, using CADCraft."
 readme = "README.md"
 license = "MIT"

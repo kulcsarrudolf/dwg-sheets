@@ -63,6 +63,9 @@ class CadCraft:
                 "center": True,
                 "width": width,
                 "height": height,
+                # Without this CADCraft keeps a 5 mm printer margin and shrinks the sheet to
+                # fit inside it. The page is the sheet frame, so it must reach the page edge.
+                "margins": [0, 0, 0, 0],
                 "landscape": width >= height,
             },
         )
