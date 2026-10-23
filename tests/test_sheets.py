@@ -50,8 +50,8 @@ def test_find_sheets_matches_frame_and_nearest_scale():
     sheets, skipped = find_sheets(rects, texts)
     assert skipped == []
     assert sheets == [
-        Sheet("A13", Rect(0, 0, 42, 29.7), 100.0),
-        Sheet("A16", Rect(50, 0, 176, 59.4), 200.0),
+        Sheet("A13", Rect(0, 0, 42, 29.7), 100.0, double=True),  # outer + inner frame
+        Sheet("A16", Rect(50, 0, 176, 59.4), 200.0),  # single frame
     ]
 
 
@@ -82,10 +82,44 @@ def test_custom_title_pattern():
     assert [(s.name, s.scale) for s in sheets] == [("S-01", 50.0)]
 
 
-def test_page_size_at_true_scale():
-    sheet = Sheet("A07", Rect(0, 0, 270, 118.8), 200)
-    assert sheet.page_size_mm(unit_mm=1000) == (1350.0, 594.0)  # metres
-    assert Sheet("x", Rect(0, 0, 4200, 2970), 10).page_size_mm(unit_mm=1) == (420.0, 297.0)  # mm
+def test_double_frame_is_the_page_and_its_outer_line_is_hidden():
+    rects = [
+        Rect(0, 0, 270, 118.8, "OUT"),  # outer trimming line
+        Rect(0, 0, 270, 118.8, "OUT2"),  # the same line drawn twice
+        Rect(4, 2, 268, 116.8, "IN"),  # drawn border
+    ]
+    texts = [text("PL. NR. A07", 260, 5), text("1:200", 250, 5)]
+    (sheet,), _ = find_sheets(rects, texts)
+    assert sheet.double
+    assert sheet.outer_handles == ("OUT", "OUT2")
+    plot = sheet.plot(unit_mm=1000)
+    assert plot.window == Rect(0, 0, 270, 118.8)
+    assert plot.page_mm == (1350.0, 594.0)
+    assert plot.hide == ("OUT", "OUT2")
+
+
+def test_single_frame_gets_margins_and_nothing_hidden():
+    rects = [Rect(0, 0, 63, 29.7, "F")]
+    texts = [text("PL. NR. A14", 60, 2), text("1:100", 58, 2)]
+    (sheet,), _ = find_sheets(rects, texts)
+    assert not sheet.double
+    plot = sheet.plot(unit_mm=1000)  # 1:100 in metres: 1 unit = 10 mm, so 20 mm = 2 units
+    assert plot.window == Rect(-2, -1, 64, 30.7)
+    assert plot.page_mm == (660.0, 317.0)
+    assert plot.hide == ()
+    assert sheet.plot(unit_mm=1000, margins_mm=(0, 0, 0, 0)).page_mm == (630.0, 297.0)
+
+
+def test_a_box_far_inside_the_frame_is_not_a_second_border():
+    rects = [Rect(0, 0, 42, 29.7, "F"), Rect(30, 1, 41, 6, "TITLE")]  # title block box, not a border
+    texts = [text("PL. NR. A13", 40, 2), text("1:100", 38, 3)]
+    (sheet,), _ = find_sheets(rects, texts)
+    assert not sheet.double
+
+
+def test_page_size_in_millimetre_drawings():
+    sheet = Sheet("x", Rect(0, 0, 4200, 2970), 10, double=True)
+    assert sheet.plot(unit_mm=1).page_mm == (420.0, 297.0)
 
 
 def test_safe_filename():

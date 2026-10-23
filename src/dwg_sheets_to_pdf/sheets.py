@@ -4,12 +4,18 @@ A sheet is found from its title block: a text such as "PL. NR. A07" names the
 sheet, the largest closed rectangle around that text (that holds no other
 title block) is the sheet frame, and the "1:N" scale text inside the frame
 closest to the title block gives the plot scale.
+
+A frame is either single (one border line) or double (an outer trimming line
+with the drawn border just inside it). A double frame is the page: its outer
+line marks where the paper is cut and is not printed. A single frame is the
+drawn border; the page is that border plus the margins (by default 20 mm on
+the left for binding and 10 mm elsewhere, the same as the double frames).
 """
 
 from __future__ import annotations
 
 import re
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 
 Point = tuple[float, float]
 
@@ -18,6 +24,13 @@ SCALE_PATTERN = re.compile(r"1\s*:\s*(\d+(?:[.,]\d+)?)")
 
 # Paper millimetres per drawing unit at 1:1.
 UNIT_MM = {"m": 1000.0, "cm": 10.0, "mm": 1.0}
+
+# Page margins (left, bottom, right, top) in paper mm around a single frame.
+DEFAULT_MARGINS_MM = (20.0, 10.0, 10.0, 10.0)
+
+# An inner border counts as the second line of a double frame when every gap to
+# the outer line is at most this share of the frame's shorter side.
+_MAX_BORDER_GAP = 0.1
 
 _EPS = 1e-6
 
@@ -28,6 +41,7 @@ class Rect:
     y0: float
     x1: float
     y1: float
+    handle: str = field(default="", compare=False)
 
     @property
     def width(self) -> float:
@@ -44,17 +58,53 @@ class Rect:
     def contains(self, p: Point) -> bool:
         return self.x0 <= p[0] <= self.x1 and self.y0 <= p[1] <= self.y1
 
+    def same_box(self, other: Rect) -> bool:
+        return all(abs(a - b) < _EPS for a, b in zip(self.box, other.box, strict=True))
+
+    def encloses(self, other: Rect) -> bool:
+        return (
+            self.x0 - _EPS <= other.x0
+            and self.y0 - _EPS <= other.y0
+            and other.x1 <= self.x1 + _EPS
+            and other.y1 <= self.y1 + _EPS
+        )
+
+    def grow(self, left: float, bottom: float, right: float, top: float) -> Rect:
+        return Rect(self.x0 - left, self.y0 - bottom, self.x1 + right, self.y1 + top)
+
+    @property
+    def box(self) -> tuple[float, float, float, float]:
+        return self.x0, self.y0, self.x1, self.y1
+
+
+@dataclass(frozen=True)
+class Plot:
+    """What to plot for one sheet: the model-space window, the page, and lines to leave out."""
+
+    window: Rect
+    page_mm: tuple[float, float]
+    hide: tuple[str, ...]
+
 
 @dataclass(frozen=True)
 class Sheet:
     name: str
     frame: Rect
     scale: float  # the N in 1:N
+    # A double frame: `frame` is the outer trimming line, with the drawn border just inside it.
+    double: bool = False
+    # Handles of every polyline drawing that outer line, left out of the plot.
+    outer_handles: tuple[str, ...] = ()
 
-    def page_size_mm(self, unit_mm: float) -> tuple[float, float]:
-        """Page width and height in mm that hold the frame at true scale."""
-        factor = unit_mm / self.scale
-        return round(self.frame.width * factor, 2), round(self.frame.height * factor, 2)
+    def plot(self, unit_mm: float, margins_mm: tuple[float, float, float, float] = DEFAULT_MARGINS_MM) -> Plot:
+        """The page at true scale. A double frame is the page; a single frame gets margins around it."""
+        mm_per_unit = unit_mm / self.scale
+        if self.double:
+            window = self.frame
+        else:
+            window = self.frame.grow(*(m / mm_per_unit for m in margins_mm))
+        page = (round(window.width * mm_per_unit, 2), round(window.height * mm_per_unit, 2))
+        return Plot(window, page, self.outer_handles)
 
 
 @dataclass(frozen=True)
@@ -79,7 +129,7 @@ def rectangles(entities: list[dict]) -> list[Rect]:
             continue
         xs = [p[0] for p in pts]
         ys = [p[1] for p in pts]
-        r = Rect(min(xs), min(ys), max(xs), max(ys))
+        r = Rect(min(xs), min(ys), max(xs), max(ys), e.get("handle", ""))
         if r.width <= _EPS or r.height <= _EPS:
             continue
         on_corners = all(
@@ -129,10 +179,25 @@ def find_sheets(
         if scale <= 0:
             skipped.append(Skipped(name, f"invalid scale 1:{scale:g}"))
             continue
-        sheets.append(Sheet(name, frame, scale))
+        double = _inner_border(frame, rects) is not None
+        outer_handles = tuple(r.handle for r in rects if double and r.same_box(frame) and r.handle)
+        sheets.append(Sheet(name, frame, scale, double, outer_handles))
 
     sheets.sort(key=lambda s: _natural_key(s.name))
     return sheets, skipped
+
+
+def _inner_border(frame: Rect, rects: list[Rect]) -> Rect | None:
+    """The drawn border just inside `frame`, if `frame` is the outer line of a double frame."""
+    limit = _MAX_BORDER_GAP * min(frame.width, frame.height)
+    best = None
+    for r in rects:
+        if r.same_box(frame) or not frame.encloses(r):
+            continue
+        gaps = (r.x0 - frame.x0, r.y0 - frame.y0, frame.x1 - r.x1, frame.y1 - r.y1)
+        if all(_EPS < g <= limit for g in gaps) and (best is None or r.area > best.area):
+            best = r
+    return best
 
 
 def safe_filename(name: str) -> str:

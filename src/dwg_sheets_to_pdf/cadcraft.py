@@ -48,11 +48,18 @@ class CadCraft:
         window: tuple[float, float, float, float],
         mm_per_unit: float,
         page_mm: tuple[float, float],
+        hide: tuple[str, ...] = (),
     ) -> None:
+        """Plot `window` at true scale on a `page_mm` page, leaving out the entities in `hide`.
+
+        Hidden entities are erased only in this CADCraft session; the drawing file is not saved.
+        """
         x0, y0, x1, y1 = window
         width, height = page_mm
-        self.run(
-            drawing,
+        commands: list[dict] = []
+        if hide:
+            commands.append({"id": "erase", "handles": list(hide)})
+        commands.append(
             {
                 "id": "exportpdf",
                 "path": str(out),
@@ -64,11 +71,12 @@ class CadCraft:
                 "width": width,
                 "height": height,
                 # Without this CADCraft keeps a 5 mm printer margin and shrinks the sheet to
-                # fit inside it. The page is the sheet frame, so it must reach the page edge.
+                # fit inside it. The window already holds the margins, so it must reach the page edge.
                 "margins": [0, 0, 0, 0],
                 "landscape": width >= height,
-            },
+            }
         )
+        self.run(drawing, *commands)
 
 
 def _command(c: dict) -> str:

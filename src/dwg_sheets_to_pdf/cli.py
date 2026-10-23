@@ -8,7 +8,17 @@ from pathlib import Path
 
 from . import __version__
 from .cadcraft import CadCraft, CadCraftError
-from .sheets import DEFAULT_TITLE_PATTERN, UNIT_MM, find_sheets, rectangles, safe_filename
+from .sheets import DEFAULT_MARGINS_MM, DEFAULT_TITLE_PATTERN, UNIT_MM, find_sheets, rectangles, safe_filename
+
+
+def _margins(value: str) -> tuple[float, float, float, float]:
+    try:
+        parts = tuple(float(v) for v in value.split(","))
+    except ValueError:
+        parts = ()
+    if len(parts) != 4 or any(v < 0 for v in parts):
+        raise argparse.ArgumentTypeError("expected four numbers >= 0: LEFT,BOTTOM,RIGHT,TOP (mm)")
+    return parts  # type: ignore[return-value]
 
 
 def main(argv: list[str] | None = None) -> int:
@@ -23,6 +33,13 @@ def main(argv: list[str] | None = None) -> int:
         "--title-pattern",
         default=DEFAULT_TITLE_PATTERN,
         help="regex that marks a title block; its first group is the sheet name (default matches 'PL. NR. A07')",
+    )
+    p.add_argument(
+        "--margins",
+        type=_margins,
+        default=DEFAULT_MARGINS_MM,
+        metavar="L,B,R,T",
+        help="page margins in mm around a single-line frame (default: 20,10,10,10)",
     )
     p.add_argument("--dry-run", action="store_true", help="list the sheets found without exporting")
     p.add_argument("--cadcraft", default="cadcraft-cli", help="path to cadcraft-cli (default: found on PATH)")
@@ -52,15 +69,16 @@ def main(argv: list[str] | None = None) -> int:
         out_dir.mkdir(parents=True, exist_ok=True)
     failures = 0
     for sheet in sheets:
-        w, h = sheet.page_size_mm(unit_mm)
+        plot = sheet.plot(unit_mm, args.margins)
+        w, h = plot.page_mm
         out = out_dir / f"{drawing.stem} - {safe_filename(sheet.name)}.pdf"
-        line = f"{sheet.name}: 1:{sheet.scale:g}, {w:g} x {h:g} mm"
+        kind = "double frame, outer line hidden" if sheet.double else "single frame, margins added"
+        line = f"{sheet.name}: 1:{sheet.scale:g}, {w:g} x {h:g} mm ({kind})"
         if args.dry_run:
             print(line)
             continue
-        f = sheet.frame
         try:
-            cad.export_pdf(drawing, out, (f.x0, f.y0, f.x1, f.y1), unit_mm / sheet.scale, (w, h))
+            cad.export_pdf(drawing, out, plot.window.box, unit_mm / sheet.scale, plot.page_mm, plot.hide)
         except CadCraftError as e:
             failures += 1
             print(f"{line} -> FAILED: {e}", file=sys.stderr)
