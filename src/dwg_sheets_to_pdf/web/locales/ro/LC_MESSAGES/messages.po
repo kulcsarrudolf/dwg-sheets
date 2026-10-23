@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: DWG Sheets VERSION\n"
 "Report-Msgid-Bugs-To: https://github.com/kulcsarrudolf/dwg-sheets-to-pdf/issues\n"
-"POT-Creation-Date: 2026-10-23 15:36+0300\n"
+"POT-Creation-Date: 2026-10-23 15:45+0300\n"
 "PO-Revision-Date: 2026-10-23 15:17+0300\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language: ro\n"
@@ -99,27 +99,27 @@ msgstr "Incadreaza pagina"
 msgid "A double border uses its outer line as the paper edge. A single border gets 20 mm binding and 10 mm margins."
 msgstr "La chenarul dublu, linia exterioara este marginea hartiei. Chenarul simplu primeste 20 mm pentru indosariere si 10 mm margini."
 
-#: src/dwg_sheets_to_pdf/web/templates/_job.html:9
+#: src/dwg_sheets_to_pdf/web/templates/_job.html:12
 msgid "Waiting for a free slot"
 msgstr "Se asteapta un loc liber"
 
-#: src/dwg_sheets_to_pdf/web/templates/_job.html:10
+#: src/dwg_sheets_to_pdf/web/templates/_job.html:13
 msgid "Reading the drawing and finding sheets"
 msgstr "Se citeste desenul si se cauta plansele"
 
-#: src/dwg_sheets_to_pdf/web/templates/_job.html:11
+#: src/dwg_sheets_to_pdf/web/templates/_job.html:14
 msgid "Plotting sheets"
 msgstr "Se ploteaza plansele"
 
-#: src/dwg_sheets_to_pdf/web/templates/_job.html:12
+#: src/dwg_sheets_to_pdf/web/templates/_job.html:15
 msgid "Done, but some sheets could not be exported."
 msgstr "Gata, dar unele planse nu au putut fi exportate."
 
-#: src/dwg_sheets_to_pdf/web/templates/_job.html:13
+#: src/dwg_sheets_to_pdf/web/templates/_job.html:16
 msgid "Done. Every sheet is ready."
 msgstr "Gata. Toate plansele sunt pregatite."
 
-#: src/dwg_sheets_to_pdf/web/templates/_job.html:17
+#: src/dwg_sheets_to_pdf/web/templates/_job.html:20
 #, python-format
 msgid "%(done)s of %(total)s sheet"
 msgid_plural "%(done)s of %(total)s sheets"
@@ -127,12 +127,12 @@ msgstr[0] "%(done)s din %(total)s plansa"
 msgstr[1] "%(done)s din %(total)s planse"
 msgstr[2] "%(done)s din %(total)s de planse"
 
-#: src/dwg_sheets_to_pdf/web/templates/_job.html:29
+#: src/dwg_sheets_to_pdf/web/templates/_job.html:32
 #, python-format
 msgid "Several sheets share a sheet number: %(list)s. Their files get -1, -2, and so on after the number, in order from left to right on the drawing. You may want to renumber their title blocks."
 msgstr "Mai multe planse au acelasi numar: %(list)s. Fisierele lor primesc -1, -2 si asa mai departe dupa numar, in ordine de la stanga la dreapta pe desen. Este bine sa renumerotati cartusele lor."
 
-#: src/dwg_sheets_to_pdf/web/templates/_job.html:37
+#: src/dwg_sheets_to_pdf/web/templates/_job.html:41
 #, python-format
 msgid "%(count)s sheet"
 msgid_plural "%(count)s sheets"
@@ -140,32 +140,71 @@ msgstr[0] "%(count)s plansa"
 msgstr[1] "%(count)s planse"
 msgstr[2] "%(count)s de planse"
 
-#: src/dwg_sheets_to_pdf/web/templates/_job.html:42
-#: src/dwg_sheets_to_pdf/web/templates/_job.html:44
+#: src/dwg_sheets_to_pdf/web/templates/_job.html:47
+msgid "Select all"
+msgstr "Selectati tot"
+
+#: src/dwg_sheets_to_pdf/web/templates/_job.html:50
+#: src/dwg_sheets_to_pdf/web/templates/_job.html:52
 msgid "Download all (ZIP)"
 msgstr "Descarca tot (ZIP)"
 
-#: src/dwg_sheets_to_pdf/web/templates/_job.html:47
+#: src/dwg_sheets_to_pdf/web/templates/_job.html:55
 msgid "Delete files now"
 msgstr "Sterge fisierele acum"
 
-#: src/dwg_sheets_to_pdf/web/templates/_job.html:63
-msgid "Open"
-msgstr "Deschide"
+#: src/dwg_sheets_to_pdf/web/templates/_job.html:68
+msgid "Open PDF"
+msgstr "Deschide PDF"
 
-#: src/dwg_sheets_to_pdf/web/templates/_job.html:64
-msgid "Download"
-msgstr "Descarca"
-
-#: src/dwg_sheets_to_pdf/web/templates/_job.html:67
+#: src/dwg_sheets_to_pdf/web/templates/_job.html:70
 msgid "Failed"
 msgstr "Esuat"
 
-#: src/dwg_sheets_to_pdf/web/templates/_job.html:69
+#: src/dwg_sheets_to_pdf/web/templates/_job.html:72
 msgid "Plotting"
 msgstr "Se ploteaza"
 
-#: src/dwg_sheets_to_pdf/web/templates/_job.html:79
+#: src/dwg_sheets_to_pdf/web/templates/_job.html:77
+msgid "Select"
+msgstr "Selectati"
+
+#: src/dwg_sheets_to_pdf/web/templates/_job.html:80
+#, python-format
+msgid "Select %(name)s"
+msgstr "Selectati %(name)s"
+
+#: src/dwg_sheets_to_pdf/web/templates/_job.html:98
+msgid "Download PDF"
+msgstr "Descarca PDF"
+
+#: src/dwg_sheets_to_pdf/web/templates/_job.html:98
+#, python-format
+msgid "Download %(name)s as PDF"
+msgstr "Descarca %(name)s ca PDF"
+
+#: src/dwg_sheets_to_pdf/web/templates/_job.html:101
+msgid "Download PNG"
+msgstr "Descarca PNG"
+
+#: src/dwg_sheets_to_pdf/web/templates/_job.html:101
+#, python-format
+msgid "Download %(name)s as PNG"
+msgstr "Descarca %(name)s ca PNG"
+
+#: src/dwg_sheets_to_pdf/web/templates/_job.html:111
+msgid "Selected"
+msgstr "Selectate"
+
+#: src/dwg_sheets_to_pdf/web/templates/_job.html:112
+msgid "Clear"
+msgstr "Anuleaza selectia"
+
+#: src/dwg_sheets_to_pdf/web/templates/_job.html:113
+msgid "Download selected (ZIP)"
+msgstr "Descarca selectia (ZIP)"
+
+#: src/dwg_sheets_to_pdf/web/templates/_job.html:119
 #, python-format
 msgid "Skipped %(name)s: %(reason)s"
 msgstr "Omisa %(name)s: %(reason)s"

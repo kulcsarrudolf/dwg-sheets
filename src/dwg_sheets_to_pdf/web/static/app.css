@@ -1,4 +1,4 @@
-/* DWG Sheets. One narrow working column, like a drawing register: drop a file, then read the sheet list.
+/* DWG Sheets. One working column, like a drawing register: drop a file, then browse the sheets as a contact sheet.
    Each colour is one light-dark() pair, so light and dark themes come from the same tokens. */
 
 @font-face { font-family: "Plex Sans"; font-weight: 400; font-display: swap; src: url("fonts/ibm-plex-sans-latin-400-normal.woff2") format("woff2"); unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD; }
@@ -26,6 +26,8 @@
   --bad-soft:    light-dark(#fbe9e7, #3a1f1d);
   --warn:        light-dark(#7a5300, #f0c96a);
   --warn-soft:   light-dark(#fdf3dc, #33290f);
+  --tray:        light-dark(#eceeec, #101412);  /* the light table a sheet's preview lies on */
+  --shadow:      light-dark(rgb(20 30 28 / .10), rgb(0 0 0 / .45));
 
   --display: "Plex Condensed", "Arial Narrow", system-ui, sans-serif;
   --body: "Plex Sans", system-ui, -apple-system, "Segoe UI", sans-serif;
@@ -36,10 +38,12 @@
 html { -webkit-text-size-adjust: 100%; }
 body { margin: 0; background: var(--paper); color: var(--ink); font: 15px/1.55 var(--body); }
 [hidden] { display: none !important; }
+.sr-only { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
+.i { width: 16px; height: 16px; flex: none; fill: none; stroke: currentColor; stroke-width: 1.6; stroke-linecap: round; stroke-linejoin: round; }
 :focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
 
 .wrap {
-  max-width: 880px;
+  max-width: 1320px;
   margin: 0 auto;
   padding-block: 40px 64px;
   padding-left: max(16px, env(safe-area-inset-left, 0px));
@@ -117,7 +121,7 @@ h1 { margin: 0; font: 600 clamp(28px, 5vw, 40px)/1.1 var(--display); letter-spac
 
 /* ---- Buttons ---------------------------------------------------------- */
 .btn {
-  display: inline-flex; align-items: center; justify-content: center;
+  display: inline-flex; align-items: center; justify-content: center; gap: 7px;
   padding: 7px 14px;
   border: 1px solid var(--rule);
   background: var(--sheet);
@@ -133,35 +137,139 @@ h1 { margin: 0; font: 600 clamp(28px, 5vw, 40px)/1.1 var(--display); letter-spac
 .btn.quiet:hover { color: var(--ink); }
 .btn[aria-disabled="true"] { opacity: .45; pointer-events: none; }
 
-/* ---- Sheet register: one row per sheet, no table chrome ---------------- */
-.register { display: grid; gap: 14px; }
-.register-head { display: flex; flex-wrap: wrap; gap: 12px; align-items: end; justify-content: space-between; }
+/* ---- Sheet register: a contact sheet of previews. Click a sheet to open its PDF; tick sheets to download a few. ---- */
+.register { display: grid; gap: 16px; }
+.register-head {
+  display: flex; flex-wrap: wrap; gap: 12px 24px; align-items: end; justify-content: space-between;
+  padding-bottom: 14px; border-bottom: 1px solid var(--rule);
+}
 .register-head h2 { margin: 0; font: 600 22px/1.2 var(--display); }
 .file { color: var(--graphite); font-size: 13px; overflow-wrap: anywhere; }
-.actions { display: flex; flex-wrap: wrap; gap: 8px; }
+.actions { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
 
-.sheets { list-style: none; margin: 0; padding: 0; background: var(--sheet); border: 1px solid var(--rule); }
-.sheet {
-  display: grid;
-  grid-template-columns: 64px minmax(56px, max-content) 64px minmax(0, 1fr) auto;
-  grid-template-areas: "outline name scale size links";
-  gap: 4px 16px;
-  align-items: center;
-  padding: 10px 16px;
-  font-variant-numeric: tabular-nums;
+.select-all { display: inline-flex; align-items: center; gap: 8px; padding: 7px 10px; font-size: 14px; cursor: pointer; user-select: none; }
+.select-all input { width: 16px; height: 16px; margin: 0; accent-color: var(--accent); cursor: inherit; }
+.select-all[aria-disabled="true"] { opacity: .45; cursor: default; }
+
+.grid {
+  --cols: 1;
+  list-style: none; margin: 0; padding: 0;
+  display: grid; gap: 16px;
+  grid-template-columns: repeat(var(--cols), minmax(0, 1fr));
 }
-.sheet + .sheet { border-top: 1px solid var(--rule); }
-.sheet .outline { grid-area: outline; display: grid; place-items: center; height: 44px; }
-.sheet .outline > span { display: block; border: 1px solid var(--graphite); background: var(--paper); }
-.sheet .outline.double > span { box-shadow: inset 0 0 0 2px var(--paper), inset 0 0 0 3px var(--graphite); }
-.sheet .name { grid-area: name; font: 600 17px/1.2 var(--display); }
-.sheet .scale { grid-area: scale; font: 13px var(--mono); color: var(--graphite); }
-.sheet .size { grid-area: size; font: 13px var(--mono); }
-.sheet .unit { color: var(--graphite); }
-.sheet .links { grid-area: links; display: flex; gap: 6px; justify-content: flex-end; }
-.sheet .links .btn { padding: 5px 10px; font-size: 13px; }
-.state { font-size: 13px; color: var(--graphite); }
-.state.failed { color: var(--bad); }
+@media (min-width: 480px)  { .grid { --cols: 2; } }
+@media (min-width: 860px)  { .grid { --cols: 3; gap: 20px; } }
+@media (min-width: 1180px) { .grid { --cols: 4; } }
+
+.card {
+  position: relative;
+  display: grid;
+  grid-template-rows: auto 1fr;
+  background: var(--sheet);
+  border: 1px solid var(--rule);
+  transition: border-color .15s, box-shadow .15s, transform .15s;
+}
+.card.is-done:hover { border-color: var(--graphite); box-shadow: 0 6px 20px -8px var(--shadow); transform: translateY(-1px); }
+.card.is-picked { border-color: var(--accent); box-shadow: 0 0 0 1px var(--accent); }
+.card.is-picked:hover { border-color: var(--accent); }
+
+/* The preview: the sheet's own shape, centred on a tray of fixed proportions (PREVIEW_RATIO in views.py). */
+.card-media {
+  position: relative;
+  display: flex; align-items: center; justify-content: center;
+  aspect-ratio: 4 / 3;
+  padding: 14px;
+  background: var(--tray);
+  border-bottom: 1px solid var(--rule);
+  overflow: hidden;
+}
+.paper { position: relative; display: block; background: #fff; box-shadow: 0 0 0 1px rgb(0 0 0 / .06), 0 2px 6px var(--shadow); }
+.paper.wide { width: 100%; }
+.paper.tall { height: 100%; }
+.paper img { display: block; width: 100%; height: 100%; }
+.card.is-done .paper img { transition: transform .25s ease; }
+.card.is-done:hover .paper img { transform: scale(1.015); }
+
+/* While plotting: the empty page outline, softly pulsing. Failed: the same outline in red. */
+.card.is-pending .paper,
+.card.is-failed .paper { background: transparent; box-shadow: none; border: 1.5px dashed var(--graphite); opacity: .5; }
+.card.is-pending .paper { animation: pulse 1.6s ease-in-out infinite; }
+.card.is-failed .paper { border-color: var(--bad); opacity: .7; }
+@keyframes pulse { 50% { opacity: .2; } }
+
+.badge, .open-hint {
+  position: absolute; right: 10px; bottom: 10px;
+  display: inline-flex; align-items: center; gap: 6px;
+  padding: 4px 8px;
+  background: var(--sheet); color: var(--graphite);
+  border: 1px solid var(--rule);
+  font: 500 12px/1.2 var(--body);
+}
+.badge.bad { color: var(--bad); border-color: currentColor; }
+.open-hint { color: var(--ink); opacity: 0; transform: translateY(4px); transition: opacity .15s, transform .15s; pointer-events: none; }
+.open-hint .i { width: 13px; height: 13px; }
+.card:hover .open-hint, .card:focus-within .open-hint { opacity: 1; transform: none; }
+
+/* Name and download buttons on one line, scale and page size under them. */
+.card-body {
+  display: grid; grid-template-columns: minmax(0, 1fr) auto; grid-template-areas: "title tools" "spec spec";
+  gap: 4px 10px; align-items: center; align-content: start; min-width: 0; padding: 10px 12px 12px 14px;
+}
+.card-title { grid-area: title; margin: 0; font: 600 18px/1.2 var(--display); overflow-wrap: anywhere; }
+.card-link { color: inherit; text-decoration: none; }
+.card-link:focus-visible { outline: none; }
+/* The whole card opens the PDF: the title's link stretches over it. The checkbox and buttons sit above. */
+.card-link::after { content: ""; position: absolute; inset: 0; z-index: 1; cursor: pointer; }
+.card:has(.card-link:focus-visible) { outline: 2px solid var(--accent); outline-offset: 2px; }
+.card-spec {
+  grid-area: spec;
+  display: flex; flex-wrap: wrap; gap: 0 10px; margin: 0;
+  color: var(--graphite); font: 12.5px/1.5 var(--mono); font-variant-numeric: tabular-nums;
+}
+
+.card-tools { grid-area: tools; position: relative; z-index: 2; display: flex; gap: 6px; align-items: center; }
+.tool {
+  display: inline-flex; align-items: center; gap: 5px;
+  height: 32px; padding: 0 9px;
+  border: 1px solid var(--rule); background: var(--sheet); color: var(--ink);
+  font: 500 12px/1 var(--mono); letter-spacing: .03em; text-decoration: none;
+}
+.tool:hover { border-color: var(--accent); color: var(--accent); }
+.tool .i { width: 14px; height: 14px; }
+
+/* The tick box: shown on hover, on touch screens, and on every card once one is ticked. */
+.pick { position: absolute; top: 8px; left: 8px; z-index: 2; display: grid; padding: 4px; cursor: pointer; }
+.pick input { position: absolute; inset: 0; margin: 0; opacity: 0; cursor: inherit; }
+.pick-box {
+  display: grid; place-items: center;
+  width: 22px; height: 22px;
+  background: var(--sheet); color: transparent;
+  border: 1.5px solid var(--graphite);
+  box-shadow: 0 1px 3px var(--shadow);
+  opacity: 0; transition: opacity .12s, background .12s, border-color .12s;
+}
+.pick-box .i { width: 14px; height: 14px; stroke-width: 2.2; }
+.card:hover .pick-box, .pick input:focus-visible + .pick-box, .register.selecting .pick-box { opacity: 1; }
+.pick input:focus-visible + .pick-box { outline: 2px solid var(--accent); outline-offset: 2px; }
+.pick input:checked + .pick-box { background: var(--accent); border-color: var(--accent); color: var(--accent-ink); }
+@media (hover: none) { .pick-box { opacity: 1; } }
+
+/* The selection bar floats at the bottom of the window while sheets are ticked. */
+.selbar {
+  position: sticky; bottom: max(16px, env(safe-area-inset-bottom, 0px)); z-index: 5;
+  justify-self: center;
+  display: flex; flex-wrap: wrap; gap: 8px 12px; align-items: center;
+  padding: 8px 8px 8px 16px;
+  background: var(--ink); color: var(--paper);
+  box-shadow: 0 10px 30px -6px rgb(0 0 0 / .35);
+  animation: rise .18s ease-out;
+}
+.selbar-count { font-size: 14px; font-variant-numeric: tabular-nums; }
+.selbar-count strong { margin-left: 4px; font: 600 15px var(--mono); }
+.selbar-count .of { margin-left: 4px; opacity: .6; font: 13px var(--mono); }
+.selbar .btn.quiet { color: var(--paper); opacity: .75; }
+.selbar .btn.quiet:hover { opacity: 1; color: var(--paper); }
+@keyframes rise { from { opacity: 0; transform: translateY(8px); } }
 
 .skipped { margin: 0; padding-left: 18px; color: var(--graphite); font-size: 13px; }
 
@@ -172,17 +280,19 @@ h1 { margin: 0; font: 600 clamp(28px, 5vw, 40px)/1.1 var(--display); letter-spac
 .how p { margin: 0; color: var(--graphite); font-size: 14px; }
 footer { color: var(--graphite); font-size: 12px; border-top: 1px solid var(--rule); padding-top: 14px; }
 
-/* ---- Phones: each sheet stacks, the buttons get the full width ---------- */
-@media (max-width: 640px) {
-  .sheet {
-    grid-template-columns: 1fr auto;
-    grid-template-areas: "name outline" "scale outline" "size outline" "links links";
-    padding: 14px 16px;
-  }
-  .sheet .links { justify-content: stretch; padding-top: 6px; }
-  .sheet .links .btn { flex: 1; padding: 8px 10px; }
+/* ---- Phones: one sheet per row, the preview beside its details ---------- */
+@media (max-width: 479px) {
+  .card { grid-template-rows: none; grid-template-columns: 120px minmax(0, 1fr); }
+  .card-media { border-bottom: 0; border-right: 1px solid var(--rule); padding: 8px; aspect-ratio: auto; min-height: 104px; }
+  .card-media .paper.tall { height: 88px; }
+  .card-body { grid-template-columns: minmax(0, 1fr); grid-template-areas: "title" "spec" "tools"; padding: 10px 12px; }
+  .card-tools { margin-top: 4px; }
+  .open-hint { display: none; }
+  .badge { right: 6px; bottom: 6px; padding: 2px 6px; font-size: 11px; }
+  .pick { top: 4px; left: 4px; }
+  .register-head .actions { width: 100%; }
+  .selbar { width: 100%; justify-content: space-between; }
 }
-
 @media (prefers-reduced-motion: reduce) {
   *, *::before { transition: none !important; animation: none !important; }
 }

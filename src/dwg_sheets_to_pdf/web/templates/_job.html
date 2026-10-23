@@ -1,4 +1,7 @@
 {#- The job panel. While the export runs it asks for a fresh copy of itself; the finished copy stops asking. -#}
+{%- macro icon_download() %}<svg class="i" viewBox="0 0 16 16" aria-hidden="true"><path d="M8 2v8m0 0L4.5 6.5M8 10l3.5-3.5M2.5 13.5h11"/></svg>{% endmacro -%}
+{%- macro icon_open() %}<svg class="i" viewBox="0 0 16 16" aria-hidden="true"><path d="M6.5 3H3v10h10V9.5M9.5 2.5h4v4m0-4L7 9"/></svg>{% endmacro -%}
+{%- macro icon_check() %}<svg class="i" viewBox="0 0 16 16" aria-hidden="true"><path d="M3.5 8.5l3 3 6-7"/></svg>{% endmacro -%}
 <section class="job"
   {% if job.running %}hx-get="/jobs/{{ job.id }}/panel" hx-trigger="load delay:700ms" hx-swap="outerHTML"{% endif %}>
 
@@ -31,17 +34,22 @@
   {% endif %}
 
   {% if job.sheets %}
-  <div class="register">
+  {#- One form around the sheets: ticking some and pressing "Download selected" asks for a ZIP of just those. -#}
+  <form class="register" id="pick-form" action="{{ job.pick_url }}" method="get" data-job="{{ job.id }}">
     <div class="register-head">
-      <div>
+      <div class="register-title">
         <h2>{% trans count=job.total %}{{ count }} sheet{% pluralize %}{{ count }} sheets{% endtrans %}</h2>
         <div class="file">{{ job.drawing }}</div>
       </div>
       <div class="actions">
+        <label class="select-all"{% if not job.ready %} aria-disabled="true"{% endif %}>
+          <input type="checkbox" data-select-all{% if not job.ready %} disabled{% endif %}>
+          <span>{{ _('Select all') }}</span>
+        </label>
         {% if job.zip_url %}
-        <a class="btn primary" href="{{ job.zip_url }}">{{ _('Download all (ZIP)') }}</a>
+        <a class="btn primary" href="{{ job.zip_url }}">{{ icon_download() }}{{ _('Download all (ZIP)') }}</a>
         {% else %}
-        <span class="btn primary" aria-disabled="true">{{ _('Download all (ZIP)') }}</span>
+        <span class="btn primary" aria-disabled="true">{{ icon_download() }}{{ _('Download all (ZIP)') }}</span>
         {% endif %}
         <button class="btn quiet" type="button" hx-delete="/jobs/{{ job.id }}" hx-target="#job" hx-swap="innerHTML">
           {{ _('Delete files now') }}
@@ -49,29 +57,60 @@
       </div>
     </div>
 
-    <ol class="sheets">
+    <ol class="grid">
       {% for s in job.sheets %}
-      <li class="sheet {{ s.status }}">
-        <span class="outline{% if s.double %} double{% endif %}" aria-hidden="true">
-          <span style="width: {{ s.outline[0] }}px; height: {{ s.outline[1] }}px"></span>
-        </span>
-        <span class="name">{{ s.name }}</span>
-        <span class="scale">1:{{ s.scale | num(t) }}</span>
-        <span class="size">{{ s.width | num(t) }} &times; {{ s.height | num(t) }} <span class="unit">mm</span></span>
-        <span class="links">
+      <li class="card is-{{ s.status }}">
+        <div class="card-media">
+          <span class="paper {{ s.fit }}" style="aspect-ratio: {{ s.ratio }}">
+            {% if s.thumb_url %}<img src="{{ s.thumb_url }}" alt="" loading="lazy" decoding="async">{% endif %}
+          </span>
           {% if s.url %}
-          <a class="btn" href="{{ s.url }}" target="_blank" rel="noopener">{{ _('Open') }}</a>
-          <a class="btn" href="{{ s.url }}?download=1">{{ _('Download') }}</a>
-          {% if s.png_url %}<a class="btn" href="{{ s.png_url }}?download=1" title="{{ s.png_dpi }} dpi">PNG</a>{% endif %}
+          <span class="open-hint" aria-hidden="true">{{ _('Open PDF') }} {{ icon_open() }}</span>
           {% elif s.status == "failed" %}
-          <span class="state failed">{{ _('Failed') }}</span>
+          <span class="badge bad">{{ _('Failed') }}</span>
           {% else %}
-          <span class="state">{{ _('Plotting') }}</span>
+          <span class="badge">{{ _('Plotting') }}</span>
           {% endif %}
-        </span>
+        </div>
+
+        {% if s.url %}
+        <label class="pick" title="{{ _('Select') }}">
+          <input type="checkbox" id="pick-{{ s.index }}" name="sheet" value="{{ s.index }}">
+          <span class="pick-box" aria-hidden="true">{{ icon_check() }}</span>
+          <span class="sr-only">{% trans name=s.name %}Select {{ name }}{% endtrans %}</span>
+        </label>
+        {% endif %}
+
+        <div class="card-body">
+          <h3 class="card-title">
+            {%- if s.url %}<a class="card-link" href="{{ s.url }}" target="_blank" rel="noopener">{{ s.name }}</a>
+            {%- else %}{{ s.name }}{% endif -%}
+          </h3>
+          {% if s.url %}
+          <div class="card-tools">
+            <a class="tool" href="{{ s.url }}?download=1" download
+               title="{{ _('Download PDF') }}" aria-label="{% trans name=s.name %}Download {{ name }} as PDF{% endtrans %}">{{ icon_download() }}PDF</a>
+            {% if s.png_url %}
+            <a class="tool" href="{{ s.png_url }}?download=1" download
+               title="{{ _('Download PNG') }} ({{ s.png_dpi }} dpi)" aria-label="{% trans name=s.name %}Download {{ name }} as PNG{% endtrans %}">{{ icon_download() }}PNG</a>
+            {% endif %}
+          </div>
+          {% endif %}
+          <p class="card-spec">
+            <span>1:{{ s.scale | num(t) }}</span>
+            <span>{{ s.width | num(t) }} &times; {{ s.height | num(t) }} mm</span>
+          </p>
+        </div>
       </li>
       {% endfor %}
     </ol>
+
+    {#- Shown by the page script while sheets are ticked. -#}
+    <div class="selbar" data-selbar hidden>
+      <span class="selbar-count">{{ _('Selected') }} <strong data-count>0</strong><span class="of">/ {{ job.ready | num(t) }}</span></span>
+      <button class="btn quiet" type="button" data-clear>{{ _('Clear') }}</button>
+      <button class="btn primary" type="submit">{{ icon_download() }}{{ _('Download selected (ZIP)') }}</button>
+    </div>
 
     {% if job.skipped %}
     <ul class="skipped">
@@ -80,6 +119,6 @@
       {% endfor %}
     </ul>
     {% endif %}
-  </div>
+  </form>
   {% endif %}
 </section>

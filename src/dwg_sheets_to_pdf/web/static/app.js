@@ -50,3 +50,84 @@
   form.addEventListener("htmx:beforeRequest", () => { bar.style.width = "0%"; form.classList.add("uploading"); });
   form.addEventListener("htmx:afterRequest", () => { form.classList.remove("uploading"); input.value = ""; });
 })();
+
+// Ticking sheets to download a few. The list is redrawn while sheets plot, so the ticks live here and are
+// put back after each redraw. Shift-click ticks a range; Escape clears. Without this script the form still
+// works: tick boxes and press the button.
+(() => {
+  const picked = new Set();
+  let job = null;
+  let last = null; // the box clicked last, for shift-click ranges
+
+  const form = () => document.getElementById("pick-form");
+  const boxes = (f) => [...f.querySelectorAll('input[name="sheet"]')];
+
+  function sync() {
+    const f = form();
+    if (!f) return;
+    if (f.dataset.job !== job) {
+      job = f.dataset.job;
+      picked.clear();
+      last = null;
+    }
+    const all = boxes(f);
+    for (const box of all) {
+      box.checked = picked.has(box.value);
+      box.closest(".card").classList.toggle("is-picked", box.checked);
+    }
+    const n = picked.size;
+    f.classList.toggle("selecting", n > 0);
+    f.querySelector("[data-selbar]").hidden = n === 0;
+    f.querySelector("[data-count]").textContent = n.toLocaleString(document.documentElement.lang);
+    const every = f.querySelector("[data-select-all]");
+    if (every) {
+      every.checked = n > 0 && n === all.length;
+      every.indeterminate = n > 0 && n < all.length;
+    }
+  }
+
+  function set(box, on) {
+    if (on) picked.add(box.value);
+    else picked.delete(box.value);
+  }
+
+  document.addEventListener("click", (e) => {
+    const box = e.target.closest?.('#pick-form input[name="sheet"]');
+    if (box && e.shiftKey && last) {
+      const all = boxes(form());
+      const [a, b] = [all.indexOf(last), all.indexOf(box)].sort((x, y) => x - y);
+      if (a >= 0) all.slice(a, b + 1).forEach((other) => set(other, box.checked));
+      window.getSelection()?.removeAllRanges();
+    }
+    if (e.target.closest?.("[data-clear]")) {
+      picked.clear();
+      sync();
+    }
+  });
+
+  document.addEventListener("change", (e) => {
+    const t = e.target;
+    if (t.matches('#pick-form input[name="sheet"]')) {
+      set(t, t.checked);
+      last = t;
+      sync();
+    } else if (t.matches("[data-select-all]")) {
+      boxes(form()).forEach((box) => set(box, t.checked));
+      sync();
+    }
+  });
+
+  document.addEventListener("keydown", (e) => {
+    if (e.key === "Escape" && picked.size) {
+      picked.clear();
+      sync();
+    }
+  });
+
+  // The redrawn list has new boxes: point `last` at the new copy of the same sheet.
+  document.addEventListener("htmx:afterSettle", () => {
+    if (last) last = form()?.querySelector(`#${last.id}`) ?? null;
+    sync();
+  });
+  sync();
+})();

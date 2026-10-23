@@ -47,7 +47,7 @@ def test_upload_shows_the_job_and_stops_polling_when_done(make_client):
         assert "hx-trigger" not in panel  # finished: no more polling
         assert "Done. Every sheet is ready." in panel
         assert "2 of 2 sheets" in panel and "2 sheets" in panel
-        assert panel.count(f"/api/jobs/{job_id}/files/") == 4  # Open and Download for each sheet
+        assert panel.count(f"/api/jobs/{job_id}/files/") == 6  # preview, open and download for each sheet
         assert ">PNG<" not in panel  # no images asked for
         assert f"/api/jobs/{job_id}/zip" in panel
         assert "Skipped A99: no frame around its title block" in panel
@@ -160,7 +160,7 @@ def test_png_images_on_request(make_client):
         assert png.content == PNG
 
         panel = c.get(f"/jobs/{job_id}/panel", headers=HX).text
-        assert panel.count(">PNG<") == 2 and 'title="300 dpi"' in panel
+        assert panel.count(">PNG<") == 2 and "(300 dpi)" in panel
         names = zipfile.ZipFile(io.BytesIO(c.get(job["zip_url"]).content)).namelist()
         assert sorted(names) == ["Project - A13.pdf", "Project - A13.png", "Project - A14.pdf", "Project - A14.png"]
 
@@ -178,3 +178,39 @@ def test_image_choice_is_remembered_in_the_form(make_client):
         assert 'value="2x" checked' in c.get("/").text
         c.cookies.set("images", "nonsense")
         assert 'value="none" checked' in c.get("/").text
+
+
+def test_sheets_show_previews_and_can_be_ticked(make_client):
+    with make_client() as c:
+        job_id = job_id_from(html_upload(c))
+        wait(c, job_id)
+        panel = c.get(f"/jobs/{job_id}/panel?lang=en", headers=HX).text
+        assert f'<img src="/api/jobs/{job_id}/files/Project - A13.preview.webp"' in panel
+        assert f'id="pick-form" action="/api/jobs/{job_id}/zip" method="get"' in panel
+        assert 'name="sheet" value="0"' in panel and 'name="sheet" value="1"' in panel
+        assert 'class="card-link" href="/api/jobs/' in panel and 'target="_blank"' in panel  # a click opens the PDF
+        assert "Download selected (ZIP)" in panel
+        assert 'style="aspect-ratio: 420 / 297"' in panel and 'class="paper wide"' in panel
+
+
+def test_sheets_still_plotting_cannot_be_ticked(make_client):
+    release = threading.Event()
+
+    def slow_exporter(p, options, on_done):
+        for r in p.results:
+            release.wait(5)
+            r.file.parent.mkdir(parents=True, exist_ok=True)
+            r.file.write_bytes(b"%PDF")
+            on_done(r)
+        return p.results
+
+    with make_client(exporter=slow_exporter) as c:
+        job_id = job_id_from(html_upload(c))
+        for _ in range(200):
+            panel = c.get(f"/jobs/{job_id}/panel?lang=en", headers=HX).text
+            if "card is-pending" in panel:
+                break
+        assert 'name="sheet"' not in panel and ">Plotting<" in panel
+        assert "data-select-all disabled" in panel
+        release.set()
+        wait(c, job_id)

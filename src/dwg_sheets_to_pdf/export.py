@@ -11,7 +11,7 @@ from dataclasses import dataclass, field
 from pathlib import Path
 
 from .cadcraft import CadCraft, CadCraftError
-from .raster import pdf_to_png
+from .raster import pdf_thumbnail, pdf_to_png
 from .sheets import (
     DEFAULT_MARGINS_MM,
     DEFAULT_TITLE_PATTERN,
@@ -31,6 +31,7 @@ class Options:
     margins_mm: tuple[float, float, float, float] = DEFAULT_MARGINS_MM
     title_pattern: str = DEFAULT_TITLE_PATTERN
     png_dpi: int | None = None  # also write a PNG of each sheet at this resolution
+    thumb_box: tuple[int, int] | None = None  # also write a small preview fitted inside this box (pixels)
 
 
 @dataclass
@@ -45,6 +46,7 @@ class SheetResult:
     label: str = ""
     png: Path | None = None  # where the PNG goes, when images were asked for
     png_dpi: int | None = None  # the resolution it was drawn at (lower than asked for very large sheets)
+    thumb: Path | None = None  # where the preview goes, when previews were asked for; None if it failed
 
     def __post_init__(self) -> None:
         self.label = self.label or self.name
@@ -80,7 +82,10 @@ def plan(cad: CadCraft, drawing: Path, out_dir: Path, options: Options, stem: st
         layout = sheet.plot(options.unit_mm, options.margins_mm)
         out = out_dir / f"{stem} - {safe_filename(label)}.pdf"
         png = out.with_suffix(".png") if options.png_dpi else None
-        results.append(SheetResult(sheet.name, sheet.scale, layout.page_mm, sheet.double, out, label=label, png=png))
+        thumb = out.with_suffix(".preview.webp") if options.thumb_box else None
+        results.append(
+            SheetResult(sheet.name, sheet.scale, layout.page_mm, sheet.double, out, label=label, png=png, thumb=thumb)
+        )
     return Plan(drawing, results, skipped, sheets, duplicates(sheets))
 
 
@@ -113,6 +118,14 @@ def export(
                 result.png_dpi = pdf_to_png(result.file, result.png, options.png_dpi)
             except Exception as e:  # PDFium reports problems with its own exception types
                 result.error = f"PNG: {e}"
+        if result.thumb and options.thumb_box:
+            try:
+                if result.ok:
+                    pdf_thumbnail(result.file, result.thumb, options.thumb_box)
+                else:
+                    result.thumb = None
+            except Exception:  # a missing preview is cosmetic: the sheet itself is fine
+                result.thumb = None
         if on_done:
             on_done(result)
         return result

@@ -12,6 +12,7 @@ carry client details.
 
 from __future__ import annotations
 
+import hashlib
 import json
 import os
 import re
@@ -20,7 +21,7 @@ import threading
 import time
 import uuid
 import zipfile
-from collections.abc import Callable
+from collections.abc import Callable, Iterable
 from dataclasses import asdict, dataclass, field, replace
 from pathlib import Path
 
@@ -43,6 +44,7 @@ class SheetInfo:
     label: str = ""  # unique: the number, with -1, -2, ... when several sheets share it
     png: str | None = None  # image file name inside pdf/, when images were asked for
     png_dpi: int | None = None
+    thumb: str | None = None  # preview image file name inside pdf/, once it is drawn
 
 
 @dataclass
@@ -88,9 +90,9 @@ class JobStore:
         return self.dir(job_id) / "pdf"
 
     def output_path(self, job_id: str, file: str) -> Path:
-        """A PDF or PNG of this job, only if the job lists it (so no path from the URL reaches the disk)."""
+        """A PDF, PNG or preview of this job, only if the job lists it (so no path from the URL reaches the disk)."""
         state = self.load(job_id)
-        if not any(file in (s.file, s.png) and s.status == "done" for s in state.sheets):
+        if not any(file in (s.file, s.png, s.thumb) and s.status == "done" for s in state.sheets):
             raise KeyError(file)
         return self.pdf_dir(job_id) / file
 
@@ -148,19 +150,31 @@ class JobStore:
 
     # Downloads -------------------------------------------------------------
 
-    def zip_path(self, job_id: str) -> Path:
-        """All exported PDFs (and images) in one ZIP, built once the job is done."""
+    def zip_path(self, job_id: str, only: Iterable[int] | None = None) -> Path:
+        """Exported PDFs (and images) in one ZIP, built once and kept.
+
+        With no `only`, every sheet, once the job is done. With `only`, the sheets at those positions in
+        the job's list that are finished, at any time; there must be at least one.
+        """
         state = self.load(job_id)
-        if state.status != "done":
-            raise KeyError(job_id)
-        path = self.dir(job_id) / "sheets.zip"
+        if only is None:
+            if state.status != "done":
+                raise KeyError(job_id)
+            picked = [s for s in state.sheets if s.status == "done"]
+            path = self.dir(job_id) / "sheets.zip"
+        else:
+            wanted = sorted({i for i in only if 0 <= i < len(state.sheets) and state.sheets[i].status == "done"})
+            if not wanted:
+                raise KeyError(job_id)
+            picked = [state.sheets[i] for i in wanted]
+            key = hashlib.sha1(",".join(map(str, wanted)).encode()).hexdigest()[:16]
+            path = self.dir(job_id) / f"sheets-{key}.zip"
         if not path.exists():
-            tmp = path.with_suffix(".zip.tmp")
+            tmp = path.with_name(f"{path.name}.{uuid.uuid4().hex}.tmp")  # two requests may build it at once
             with zipfile.ZipFile(tmp, "w", zipfile.ZIP_DEFLATED) as z:
-                for s in state.sheets:
-                    if s.status == "done":
-                        for name in filter(None, (s.file, s.png)):
-                            z.write(self.pdf_dir(job_id) / name, name)
+                for s in picked:
+                    for name in filter(None, (s.file, s.png)):
+                        z.write(self.pdf_dir(job_id) / name, name)
             os.replace(tmp, path)
         return path
 
@@ -213,6 +227,7 @@ def run_job(store: JobStore, job_id: str, options: Options, planner: Planner, ex
                 info.status = "done" if r.ok else "failed"
                 info.error = r.error
                 info.png_dpi = r.png_dpi
+                info.thumb = r.thumb.name if r.thumb and r.ok else None
                 store.save(state)
 
         exporter(p, options, on_done)

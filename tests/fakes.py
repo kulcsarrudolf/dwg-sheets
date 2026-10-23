@@ -8,6 +8,7 @@ from dwg_sheets_to_pdf.sheets import Rect, Sheet, Skipped, duplicates, labels
 
 PDF = b"%PDF-1.7 fake\n"
 PNG = b"\x89PNG\r\n\x1a\n fake"
+WEBP = b"RIFF\x00\x00\x00\x00WEBP fake"
 
 
 def fake_planner(names=("A13", "A14"), skipped=()):
@@ -23,6 +24,7 @@ def fake_planner(names=("A13", "A14"), skipped=()):
                 out_dir / f"{stem} - {label}.pdf",
                 label=label,
                 png=out_dir / f"{stem} - {label}.png" if options.png_dpi else None,
+                thumb=out_dir / f"{stem} - {label}.preview.webp" if options.thumb_box else None,
             )
             for s, label in zip(sheets, labels(sheets), strict=True)
         ]
@@ -42,6 +44,8 @@ def fake_exporter(fail=()):
                 if r.png:
                     r.png.write_bytes(PNG)
                     r.png_dpi = options.png_dpi
+                if r.thumb:
+                    r.thumb.write_bytes(WEBP)
             on_done(r)
         return p.results
 

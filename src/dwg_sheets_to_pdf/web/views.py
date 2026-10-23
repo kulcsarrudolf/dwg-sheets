@@ -15,7 +15,8 @@ from .jobs import JobState
 from .service import JobError, JobService, file_url, urls
 
 _ONE_YEAR = 365 * 24 * 3600
-OUTLINE_BOX = (60, 42)  # px: the largest page outline fits this box; the others use the same scale
+# Width over height of the box each sheet's preview sits in on the page; must match .card-media in app.css.
+PREVIEW_RATIO = 4 / 3
 
 
 def templates() -> Jinja2Templates:
@@ -107,9 +108,7 @@ def job_view(state: JobState) -> dict:
     sheets = state.sheets
     done = sum(s.status != "pending" for s in sheets)
     failed = sum(s.status == "failed" for s in sheets)
-    max_w = max((s.page_mm[0] for s in sheets), default=1)
-    max_h = max((s.page_mm[1] for s in sheets), default=1)
-    k = min(OUTLINE_BOX[0] / max_w, OUTLINE_BOX[1] / max_h)
+    ready = sum(s.status == "done" for s in sheets)
     return {
         "id": state.id,
         "drawing": state.drawing,
@@ -123,21 +122,26 @@ def job_view(state: JobState) -> dict:
         "duplicates": ", ".join(f"{name} ({n}\u00d7)" for name, n in state.duplicates.items()),
         "percent": round(100 * done / len(sheets)) if sheets else 0,
         "zip_url": urls(state.id)["zip"] if state.status == "done" else None,
+        "pick_url": urls(state.id)["zip"],  # ?sheet=0&sheet=3 for only some sheets
+        "ready": ready,
         "skipped": state.skipped,
         "sheets": [
             {
+                "index": i,
                 "name": s.label or s.name,
                 "scale": s.scale,
                 "width": s.page_mm[0],
                 "height": s.page_mm[1],
-                "double": s.double,
                 "status": s.status,
                 "url": file_url(state.id, s.file) if s.status == "done" else None,
                 "png_url": file_url(state.id, s.png) if s.status == "done" and s.png else None,
                 "png_dpi": s.png_dpi,
-                "outline": (max(4, round(s.page_mm[0] * k)), max(4, round(s.page_mm[1] * k))),
+                "thumb_url": file_url(state.id, s.thumb) if s.status == "done" and s.thumb else None,
+                # The page shape: the preview (or its outline while plotting) fills the box's width or height.
+                "ratio": f"{s.page_mm[0]:g} / {s.page_mm[1]:g}",
+                "fit": "wide" if s.page_mm[0] / s.page_mm[1] >= PREVIEW_RATIO else "tall",
             }
-            for s in sheets
+            for i, s in enumerate(sheets)
         ],
     }
 

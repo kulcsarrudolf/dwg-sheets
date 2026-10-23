@@ -26,6 +26,9 @@ Sheets without a frame or a scale are skipped and listed, so nothing is silently
 ## Web app (Docker)
 
 Upload a drawing in the browser, watch its sheets plot, and download them one by one or as a ZIP.
+The sheets show as a grid of previews (four across on a wide screen, one per row on a phone).
+Click a sheet to open its PDF.
+Tick a few (shift-click ticks a range) to download just those as one ZIP; scripts can ask for the same with `/api/jobs/<id>/zip?sheet=0&sheet=3`, counting sheets from 0 in the job's list.
 The page is in English, Romanian and Hungarian: it follows the browser's language, remembers the reader's choice, and takes `?lang=en|ro|hu` in links.
 Translations are gettext `.po` files; [docs/translations.md](docs/translations.md) explains how to edit them or add a language.
 
