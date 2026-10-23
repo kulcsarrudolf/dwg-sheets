@@ -1,6 +1,6 @@
 # dwg-sheets-to-pdf
 
-Export every sheet of a DWG or DXF drawing to its own PDF, at true scale, with one command.
+Export every sheet of a DWG or DXF drawing to its own PDF, at true scale, with one command or from a web page.
 
 Many drawings keep all their sheets side by side in model space instead of in paper-space layouts.
 Printing them usually means framing each sheet by hand, picking a paper size and a scale, and plotting.
@@ -23,7 +23,37 @@ For each title block in the drawing:
 
 Sheets without a frame or a scale are skipped and listed, so nothing is silently left out.
 
-## Install
+## Web app (Docker)
+
+Upload a drawing in the browser, watch its sheets plot, and download them one by one or as a ZIP.
+
+```sh
+docker compose up -d --build
+```
+
+Then open <http://localhost:8000>.
+
+The image is self-contained and runs on `linux/amd64` and `linux/arm64`, so it can go to any container service (Cloud Run, Azure Container Apps, Fly.io, ECS, Kubernetes) unchanged:
+
+- CADCraft's command-line tool comes from its official Linux release, pinned to a version and checked against its SHA-256.
+- Liberation fonts are installed under the Arial, Times New Roman and Courier New names that AutoCAD drawings ask for. They have the same letter widths, so title blocks lay out as designed.
+- It runs as a non-root user, listens on `$PORT`, has a `/healthz` endpoint, and keeps uploads only in temporary storage.
+
+Settings, all optional:
+
+| Variable | Default | Meaning |
+|---|---|---|
+| `APP_PASSWORD` | none | Require this password (HTTP Basic, any user name). Set it before exposing the app beyond your own machine. |
+| `PORT` | `8000` | Port to listen on |
+| `MAX_UPLOAD_MB` | `100` | Largest drawing accepted |
+| `JOB_TTL_MINUTES` | `30` | Uploads and PDFs are deleted after this long |
+| `MAX_CONCURRENT_JOBS` | `2` | Drawings processed at the same time |
+| `EXPORT_WORKERS` | `4` | Sheets plotted in parallel per drawing |
+| `WORK_DIR` | `/tmp/jobs` | Where jobs are kept while they live |
+
+Job state lives on the local disk of the container, so run a single instance (or pin each user to one instance).
+
+## Install the command-line tool
 
 1. Install the CADCraft command-line tool, `cadcraft-cli`, from the [CADCraft releases](https://github.com/storytold/cadcraft/releases) (macOS: `cadcraft-cli-<version>-macos-universal.zip`) and put it on your `PATH`.
 2. Install this tool with [uv](https://docs.astral.sh/uv/):
@@ -74,6 +104,7 @@ The outer frame line is left out only inside the export run; the drawing is not 
 uv sync
 uv run pytest
 uv run ruff check . && uv run ruff format --check .
+uv run dwg-sheets-web    # the web app without Docker, on http://localhost:8000
 ```
 
 ## License

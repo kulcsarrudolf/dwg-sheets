@@ -1,0 +1,16 @@
+services:
+  web:
+    build: .
+    image: dwg-sheets:latest
+    ports:
+      - "8000:8000"
+    environment:
+      # Set APP_PASSWORD before exposing the app beyond your own machine.
+      APP_PASSWORD: ${APP_PASSWORD:-}
+      MAX_UPLOAD_MB: ${MAX_UPLOAD_MB:-100}
+      JOB_TTL_MINUTES: ${JOB_TTL_MINUTES:-30}
+    # Uploads and PDFs live only in memory-backed temp storage and vanish with the container.
+    tmpfs:
+      - /tmp:size=1g,mode=1777
+    read_only: true
+    restart: unless-stopped
