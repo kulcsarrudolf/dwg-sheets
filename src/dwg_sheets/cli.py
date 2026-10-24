@@ -1,4 +1,4 @@
-"""dwg-sheets-to-pdf: export every sheet drawn in model space to its own PDF."""
+"""dwg-sheets: export every sheet drawn in model space to its own PDF."""
 
 from __future__ import annotations
 
@@ -26,7 +26,7 @@ def _margins(value: str) -> tuple[float, float, float, float]:
 
 def main(argv: list[str] | None = None) -> int:
     p = argparse.ArgumentParser(
-        prog="dwg-sheets-to-pdf",
+        prog="dwg-sheets",
         description="Export every sheet drawn in model space of a DWG/DXF to its own PDF, at true scale.",
     )
     p.add_argument("drawing", type=Path, help="input .dwg or .dxf file")

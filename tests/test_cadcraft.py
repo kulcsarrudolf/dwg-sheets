@@ -1,8 +1,8 @@
 import json
 from pathlib import Path
 
-from dwg_sheets_to_pdf import cadcraft
-from dwg_sheets_to_pdf.cadcraft import CadCraft
+from dwg_sheets import cadcraft
+from dwg_sheets.cadcraft import CadCraft
 
 
 def export_commands(monkeypatch, page_mm, hide=()):

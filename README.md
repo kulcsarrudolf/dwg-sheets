@@ -1,6 +1,7 @@
-# dwg-sheets-to-pdf
+# dwg-sheets
 
-Export every sheet of a DWG or DXF drawing to its own PDF, at true scale, with one command or from a web page.
+Tools for the sheets of a DWG or DXF drawing.
+Today it exports every sheet to its own PDF, at true scale, with one command or from a web page.
 
 Many drawings keep all their sheets side by side in model space instead of in paper-space layouts.
 Printing them usually means framing each sheet by hand, picking a paper size and a scale, and plotting.
@@ -71,13 +72,13 @@ Job state lives on the local disk of the container, so run a single instance (or
 2. Install this tool with [uv](https://docs.astral.sh/uv/):
 
 ```sh
-uv tool install git+https://github.com/kulcsarrudolf/dwg-sheets-to-pdf
+uv tool install git+https://github.com/kulcsarrudolf/dwg-sheets
 ```
 
 ## Use
 
 ```sh
-dwg-sheets-to-pdf "Project.dwg"
+dwg-sheets "Project.dwg"
 ```
 
 The PDFs go to a `Project - PDF` folder next to the drawing, one file per sheet: `Project - A03.pdf`, `Project - A04.pdf`, and so on.

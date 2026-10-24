@@ -6,7 +6,7 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: DWG Sheets VERSION\n"
-"Report-Msgid-Bugs-To: https://github.com/kulcsarrudolf/dwg-sheets-to-pdf/issues\n"
+"Report-Msgid-Bugs-To: https://github.com/kulcsarrudolf/dwg-sheets/issues\n"
 "POT-Creation-Date: 2026-10-23 15:50+0300\n"
 "PO-Revision-Date: 2026-10-23 15:17+0300\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
@@ -18,243 +18,243 @@ msgstr ""
 "Content-Transfer-Encoding: 8bit\n"
 "Generated-By: Babel 2.18.0\n"
 
-#: src/dwg_sheets_to_pdf/web/i18n.py:36
+#: src/dwg_sheets/web/i18n.py:36
 msgid "Choose a .dwg or .dxf file."
 msgstr "Válasszon egy .dwg vagy .dxf fájlt."
 
-#: src/dwg_sheets_to_pdf/web/i18n.py:37
+#: src/dwg_sheets/web/i18n.py:37
 #, python-format
 msgid "The file is larger than %(mb)s MB."
 msgstr "A fájl nagyobb, mint %(mb)s MB."
 
-#: src/dwg_sheets_to_pdf/web/i18n.py:38
+#: src/dwg_sheets/web/i18n.py:38
 msgid "The file is empty."
 msgstr "A fájl üres."
 
-#: src/dwg_sheets_to_pdf/web/i18n.py:39
+#: src/dwg_sheets/web/i18n.py:39
 msgid "Choose PDF only, PDF + PNG, or PDF + PNG 2×."
 msgstr "Válassza ezek egyikét: csak PDF, PDF + PNG vagy PDF + PNG 2×."
 
-#: src/dwg_sheets_to_pdf/web/i18n.py:40
+#: src/dwg_sheets/web/i18n.py:40
 msgid "This export no longer exists. Uploads are deleted after a while, so upload the drawing again."
 msgstr "Ez az export már nem létezik. A feltöltések egy idő után törlődnek, ezért töltse fel újra a rajzot."
 
-#: src/dwg_sheets_to_pdf/web/i18n.py:41
+#: src/dwg_sheets/web/i18n.py:41
 msgid "No sheets found. Each sheet needs a “PL. NR.” title block inside a rectangular frame."
 msgstr "Nem található tervlap. Minden tervlaphoz egy „PL. NR.” szövegmező kell egy téglalap alakú kereten belül."
 
-#: src/dwg_sheets_to_pdf/web/i18n.py:42
+#: src/dwg_sheets/web/i18n.py:42
 msgid "The drawing could not be read. Check that it opens in AutoCAD and try again."
 msgstr "A rajzot nem sikerült beolvasni. Ellenőrizze, hogy megnyílik-e AutoCAD-ben, és próbálja újra."
 
-#: src/dwg_sheets_to_pdf/web/i18n.py:43
+#: src/dwg_sheets/web/i18n.py:43
 msgid "Something went wrong while exporting. Try again."
 msgstr "Hiba történt az exportálás közben. Próbálja újra."
 
-#: src/dwg_sheets_to_pdf/web/i18n.py:46
+#: src/dwg_sheets/web/i18n.py:46
 msgid "no frame around its title block"
 msgstr "nincs keret a szövegmező körül"
 
-#: src/dwg_sheets_to_pdf/web/i18n.py:47
+#: src/dwg_sheets/web/i18n.py:47
 msgid "no 1:N scale inside its frame"
 msgstr "nincs 1:N méretarány a keretben"
 
-#: src/dwg_sheets_to_pdf/web/i18n.py:48
+#: src/dwg_sheets/web/i18n.py:48
 msgid "the scale in its title block is not valid"
 msgstr "a szövegmezőben lévő méretarány érvénytelen"
 
-#: src/dwg_sheets_to_pdf/web/i18n.py:73
+#: src/dwg_sheets/web/i18n.py:73
 #, python-format
 msgid "%(failed)s of %(total)s sheet could not be exported."
 msgid_plural "%(failed)s of %(total)s sheets could not be exported."
 msgstr[0] "%(total)s tervlapból %(failed)s exportálása nem sikerült."
 
-#: src/dwg_sheets_to_pdf/web/templates/_intro.html:1
+#: src/dwg_sheets/web/templates/_intro.html:1
 msgid "The files were deleted from the server."
 msgstr "A fájlok törölve lettek a szerverről."
 
-#: src/dwg_sheets_to_pdf/web/templates/_intro.html:4
+#: src/dwg_sheets/web/templates/_intro.html:4
 msgid "Finds each sheet"
 msgstr "Megtalálja a tervlapokat"
 
-#: src/dwg_sheets_to_pdf/web/templates/_intro.html:5
+#: src/dwg_sheets/web/templates/_intro.html:5
 msgid "Every title block with a “PL. NR.” sheet number marks a sheet. The rectangle around it is the page."
 msgstr "Minden „PL. NR.” lapszámos szövegmező egy tervlapot jelöl. A körülötte lévő téglalap a lap."
 
-#: src/dwg_sheets_to_pdf/web/templates/_intro.html:8
+#: src/dwg_sheets/web/templates/_intro.html:8
 msgid "Keeps the scale"
 msgstr "Megtartja a méretarányt"
 
-#: src/dwg_sheets_to_pdf/web/templates/_intro.html:9
+#: src/dwg_sheets/web/templates/_intro.html:9
 msgid "The “SCARA 1:N” in the title block sets the plot scale, so a 1:100 sheet prints at 1:100 at 100%."
 msgstr "A szövegmező „SCARA 1:N” értéke adja a plottolási méretarányt, így egy 1:100-as lap 100%-on nyomtatva 1:100-as."
 
-#: src/dwg_sheets_to_pdf/web/templates/_intro.html:12
+#: src/dwg_sheets/web/templates/_intro.html:12
 msgid "Frames the page"
 msgstr "Lapra igazít"
 
-#: src/dwg_sheets_to_pdf/web/templates/_intro.html:13
+#: src/dwg_sheets/web/templates/_intro.html:13
 msgid "A double border uses its outer line as the paper edge. A single border gets 20 mm binding and 10 mm margins."
 msgstr "Dupla keretnél a külső vonal a papír széle. Az egyszerű keret 20 mm fűzési és 10 mm egyéb margót kap."
 
-#: src/dwg_sheets_to_pdf/web/templates/_job.html:12
+#: src/dwg_sheets/web/templates/_job.html:12
 msgid "Waiting for a free slot"
 msgstr "Várakozás szabad helyre"
 
-#: src/dwg_sheets_to_pdf/web/templates/_job.html:13
+#: src/dwg_sheets/web/templates/_job.html:13
 msgid "Reading the drawing and finding sheets"
 msgstr "A rajz beolvasása és a tervlapok keresése"
 
-#: src/dwg_sheets_to_pdf/web/templates/_job.html:14
+#: src/dwg_sheets/web/templates/_job.html:14
 msgid "Plotting sheets"
 msgstr "Tervlapok plottolása"
 
-#: src/dwg_sheets_to_pdf/web/templates/_job.html:15
+#: src/dwg_sheets/web/templates/_job.html:15
 msgid "Done, but some sheets could not be exported."
 msgstr "Kész, de néhány tervlapot nem sikerült exportálni."
 
-#: src/dwg_sheets_to_pdf/web/templates/_job.html:16
+#: src/dwg_sheets/web/templates/_job.html:16
 msgid "Done. Every sheet is ready."
 msgstr "Kész. Minden tervlap elkészült."
 
-#: src/dwg_sheets_to_pdf/web/templates/_job.html:20
+#: src/dwg_sheets/web/templates/_job.html:20
 #, python-format
 msgid "%(done)s of %(total)s sheet"
 msgid_plural "%(done)s of %(total)s sheets"
 msgstr[0] "%(done)s / %(total)s tervlap"
 
-#: src/dwg_sheets_to_pdf/web/templates/_job.html:32
+#: src/dwg_sheets/web/templates/_job.html:32
 #, python-format
 msgid "Several sheets share a sheet number: %(list)s. Their files get -1, -2, and so on after the number, in order from left to right on the drawing. You may want to renumber their title blocks."
 msgstr "Több tervlapnak azonos a lapszáma: %(list)s. A fájljaik a szám után -1, -2 stb. jelölést kapnak, a rajzon balról jobbra haladva. Érdemes átszámozni a szövegmezőiket."
 
-#: src/dwg_sheets_to_pdf/web/templates/_job.html:41
+#: src/dwg_sheets/web/templates/_job.html:41
 #, python-format
 msgid "%(count)s sheet"
 msgid_plural "%(count)s sheets"
 msgstr[0] "%(count)s tervlap"
 
-#: src/dwg_sheets_to_pdf/web/templates/_job.html:47
+#: src/dwg_sheets/web/templates/_job.html:47
 msgid "Select all"
 msgstr "Összes kijelölése"
 
-#: src/dwg_sheets_to_pdf/web/templates/_job.html:50
-#: src/dwg_sheets_to_pdf/web/templates/_job.html:52
+#: src/dwg_sheets/web/templates/_job.html:50
+#: src/dwg_sheets/web/templates/_job.html:52
 msgid "Download all (ZIP)"
 msgstr "Összes letöltése (ZIP)"
 
-#: src/dwg_sheets_to_pdf/web/templates/_job.html:55
+#: src/dwg_sheets/web/templates/_job.html:55
 msgid "Delete files now"
 msgstr "Fájlok törlése most"
 
-#: src/dwg_sheets_to_pdf/web/templates/_job.html:68
+#: src/dwg_sheets/web/templates/_job.html:68
 msgid "Open PDF"
 msgstr "PDF megnyitása"
 
-#: src/dwg_sheets_to_pdf/web/templates/_job.html:70
+#: src/dwg_sheets/web/templates/_job.html:70
 msgid "Failed"
 msgstr "Sikertelen"
 
-#: src/dwg_sheets_to_pdf/web/templates/_job.html:72
+#: src/dwg_sheets/web/templates/_job.html:72
 msgid "Plotting"
 msgstr "Plottolás"
 
-#: src/dwg_sheets_to_pdf/web/templates/_job.html:77
+#: src/dwg_sheets/web/templates/_job.html:77
 msgid "Select"
 msgstr "Kijelölés"
 
-#: src/dwg_sheets_to_pdf/web/templates/_job.html:80
+#: src/dwg_sheets/web/templates/_job.html:80
 #, python-format
 msgid "Select %(name)s"
 msgstr "%(name)s kijelölése"
 
-#: src/dwg_sheets_to_pdf/web/templates/_job.html:92
+#: src/dwg_sheets/web/templates/_job.html:92
 msgid "Download PDF"
 msgstr "PDF letöltése"
 
-#: src/dwg_sheets_to_pdf/web/templates/_job.html:92
+#: src/dwg_sheets/web/templates/_job.html:92
 #, python-format
 msgid "Download %(name)s as PDF"
 msgstr "%(name)s letöltése PDF-ként"
 
-#: src/dwg_sheets_to_pdf/web/templates/_job.html:95
+#: src/dwg_sheets/web/templates/_job.html:95
 msgid "Download PNG"
 msgstr "PNG letöltése"
 
-#: src/dwg_sheets_to_pdf/web/templates/_job.html:95
+#: src/dwg_sheets/web/templates/_job.html:95
 #, python-format
 msgid "Download %(name)s as PNG"
 msgstr "%(name)s letöltése PNG-ként"
 
-#: src/dwg_sheets_to_pdf/web/templates/_job.html:110
+#: src/dwg_sheets/web/templates/_job.html:110
 msgid "Selected"
 msgstr "Kijelölve"
 
-#: src/dwg_sheets_to_pdf/web/templates/_job.html:111
+#: src/dwg_sheets/web/templates/_job.html:111
 msgid "Clear"
 msgstr "Kijelölés törlése"
 
-#: src/dwg_sheets_to_pdf/web/templates/_job.html:112
+#: src/dwg_sheets/web/templates/_job.html:112
 msgid "Download selected (ZIP)"
 msgstr "Kijelöltek letöltése (ZIP)"
 
-#: src/dwg_sheets_to_pdf/web/templates/_job.html:118
+#: src/dwg_sheets/web/templates/_job.html:118
 #, python-format
 msgid "Skipped %(name)s: %(reason)s"
 msgstr "Kihagyva: %(name)s (%(reason)s)"
 
-#: src/dwg_sheets_to_pdf/web/templates/base.html:7
-#: src/dwg_sheets_to_pdf/web/templates/base.html:27
+#: src/dwg_sheets/web/templates/base.html:7
+#: src/dwg_sheets/web/templates/base.html:27
 msgid "Drop a drawing and get every sheet as its own PDF, plotted at the scale in its title block."
 msgstr "Húzzon ide egy rajzot, és minden tervlapot külön PDF-ként kap meg, a szövegmezőben megadott méretarányban."
 
-#: src/dwg_sheets_to_pdf/web/templates/base.html:19
+#: src/dwg_sheets/web/templates/base.html:19
 msgid "Language"
 msgstr "Nyelv"
 
-#: src/dwg_sheets_to_pdf/web/templates/base.html:33
+#: src/dwg_sheets/web/templates/base.html:33
 #, python-format
 msgid "Uploaded drawings and their PDFs are deleted automatically after %(ttl)s minutes."
 msgstr "A feltöltött rajzok és PDF-jeik %(ttl)s perc után automatikusan törlődnek."
 
-#: src/dwg_sheets_to_pdf/web/templates/base.html:34
+#: src/dwg_sheets/web/templates/base.html:34
 msgid "Drawing units are metres."
 msgstr "A rajz mértékegysége méter."
 
-#: src/dwg_sheets_to_pdf/web/templates/index.html:10
+#: src/dwg_sheets/web/templates/index.html:10
 msgid "Drop a .dwg or .dxf file here"
 msgstr "Húzzon ide egy .dwg vagy .dxf fájlt"
 
-#: src/dwg_sheets_to_pdf/web/templates/index.html:11
+#: src/dwg_sheets/web/templates/index.html:11
 #, python-format
 msgid "or click to choose one. Up to %(mb)s MB."
 msgstr "vagy kattintson a kiválasztáshoz. Legfeljebb %(mb)s MB."
 
-#: src/dwg_sheets_to_pdf/web/templates/index.html:15
+#: src/dwg_sheets/web/templates/index.html:15
 msgid "Output"
 msgstr "Kimenet"
 
-#: src/dwg_sheets_to_pdf/web/templates/index.html:18
+#: src/dwg_sheets/web/templates/index.html:18
 msgid "PDF only"
 msgstr "Csak PDF"
 
-#: src/dwg_sheets_to_pdf/web/templates/index.html:18
+#: src/dwg_sheets/web/templates/index.html:18
 msgid "vector"
 msgstr "vektoros"
 
-#: src/dwg_sheets_to_pdf/web/templates/index.html:19
+#: src/dwg_sheets/web/templates/index.html:19
 msgid "PDF + PNG"
 msgstr "PDF + PNG"
 
-#: src/dwg_sheets_to_pdf/web/templates/index.html:20
+#: src/dwg_sheets/web/templates/index.html:20
 msgid "PDF + PNG 2×"
 msgstr "PDF + PNG 2×"
 
-#: src/dwg_sheets_to_pdf/web/templates/index.html:20
+#: src/dwg_sheets/web/templates/index.html:20
 msgid "300 dpi, sharper"
 msgstr "300 dpi, élesebb"
 
-#: src/dwg_sheets_to_pdf/web/templates/index.html:31
+#: src/dwg_sheets/web/templates/index.html:31
 msgid "Upload"
 msgstr "Feltöltés"
 

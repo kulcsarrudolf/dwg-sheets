@@ -8,9 +8,9 @@ This document is for anyone who edits a translation or adds a language.
 
 | File | What it is |
 |---|---|
-| `src/dwg_sheets_to_pdf/web/locales/messages.pot` | The template: every English text the app shows. Generated, never edited by hand. |
-| `src/dwg_sheets_to_pdf/web/locales/ro/LC_MESSAGES/messages.po` | Romanian |
-| `src/dwg_sheets_to_pdf/web/locales/hu/LC_MESSAGES/messages.po` | Hungarian |
+| `src/dwg_sheets/web/locales/messages.pot` | The template: every English text the app shows. Generated, never edited by hand. |
+| `src/dwg_sheets/web/locales/ro/LC_MESSAGES/messages.po` | Romanian |
+| `src/dwg_sheets/web/locales/hu/LC_MESSAGES/messages.po` | Hungarian |
 
 These are standard gettext files.
 Open a `.po` file in a translation editor such as [Poedit](https://poedit.net/), or in any text editor.
@@ -68,8 +68,8 @@ Numbers on the page (page sizes, counts) are formatted for each language automat
 When a developer adds or changes text in the code or the templates, update the template and both catalogs:
 
 ```sh
-uv run pybabel extract -F babel.cfg -k N_ --no-wrap -o src/dwg_sheets_to_pdf/web/locales/messages.pot .
-uv run pybabel update -i src/dwg_sheets_to_pdf/web/locales/messages.pot -d src/dwg_sheets_to_pdf/web/locales --no-wrap
+uv run pybabel extract -F babel.cfg -k N_ --no-wrap -o src/dwg_sheets/web/locales/messages.pot .
+uv run pybabel update -i src/dwg_sheets/web/locales/messages.pot -d src/dwg_sheets/web/locales --no-wrap
 ```
 
 `update` adds the new texts with an empty `msgstr`, and marks texts whose English changed as `#, fuzzy`.
@@ -88,11 +88,11 @@ The tests check that:
 1. Create its catalog, for example German:
 
    ```sh
-   uv run pybabel init -i src/dwg_sheets_to_pdf/web/locales/messages.pot -d src/dwg_sheets_to_pdf/web/locales -l de --no-wrap
+   uv run pybabel init -i src/dwg_sheets/web/locales/messages.pot -d src/dwg_sheets/web/locales -l de --no-wrap
    ```
 
 2. Translate every entry in `locales/de/LC_MESSAGES/messages.po`.
-3. Add the language to `LANGUAGES` in `src/dwg_sheets_to_pdf/web/i18n.py`, with its name in its own language.
+3. Add the language to `LANGUAGES` in `src/dwg_sheets/web/i18n.py`, with its name in its own language.
    The switcher in the page header shows it from then on.
 4. Add it to the language list in the tests (`tests/test_i18n.py`).
 

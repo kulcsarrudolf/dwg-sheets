@@ -23,7 +23,7 @@ LANGUAGES = {"en": "English", "ro": "Romana", "hu": "Magyar"}  # Romanian is wri
 DEFAULT_LANGUAGE = "en"
 COOKIE = "lang"
 
-LOCALES = files("dwg_sheets_to_pdf.web").joinpath("locales")
+LOCALES = files("dwg_sheets.web").joinpath("locales")
 
 
 def N_(message: str) -> str:

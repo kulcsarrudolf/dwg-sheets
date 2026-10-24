@@ -1,6 +1,6 @@
 from PIL import Image
 
-from dwg_sheets_to_pdf.raster import PNG_QUALITY, pdf_thumbnail, pdf_to_png
+from dwg_sheets.raster import PNG_QUALITY, pdf_thumbnail, pdf_to_png
 
 
 def make_pdf(path, width_mm, height_mm):

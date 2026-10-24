@@ -3,8 +3,8 @@
 import time
 from pathlib import Path
 
-from dwg_sheets_to_pdf.export import Plan, SheetResult
-from dwg_sheets_to_pdf.sheets import Rect, Sheet, Skipped, duplicates, labels
+from dwg_sheets.export import Plan, SheetResult
+from dwg_sheets.sheets import Rect, Sheet, Skipped, duplicates, labels
 
 PDF = b"%PDF-1.7 fake\n"
 PNG = b"\x89PNG\r\n\x1a\n fake"

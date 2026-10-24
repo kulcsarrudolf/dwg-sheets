@@ -67,7 +67,7 @@ wheels = [
 ]
 
 [[package]]
-name = "dwg-sheets-to-pdf"
+name = "dwg-sheets"
 version = "0.6.0"
 source = { editable = "." }
 dependencies = [
@@ -87,7 +87,7 @@ web = [
 
 [package.dev-dependencies]
 dev = [
-    { name = "dwg-sheets-to-pdf", extra = ["web"] },
+    { name = "dwg-sheets", extra = ["web"] },
     { name = "httpx2", version = "2.14.0", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version < '3.11'" },
     { name = "httpx2", version = "2.16.0", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version >= '3.11'" },
     { name = "pytest" },
@@ -108,7 +108,7 @@ provides-extras = ["web"]
 
 [package.metadata.requires-dev]
 dev = [
-    { name = "dwg-sheets-to-pdf", extras = ["web"] },
+    { name = "dwg-sheets", extras = ["web"] },
     { name = "httpx2", specifier = ">=2.14.0" },
     { name = "pytest", specifier = ">=8" },
     { name = "ruff", specifier = ">=0.6" },

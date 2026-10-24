@@ -6,10 +6,10 @@ from pathlib import Path
 import pytest
 from babel.messages.pofile import read_po
 
-from dwg_sheets_to_pdf.web.i18n import LANGUAGES, negotiate, translator
+from dwg_sheets.web.i18n import LANGUAGES, negotiate, translator
 
 ROOT = Path(__file__).parents[1]
-LOCALES = ROOT / "src/dwg_sheets_to_pdf/web/locales"
+LOCALES = ROOT / "src/dwg_sheets/web/locales"
 TRANSLATED = [lang for lang in LANGUAGES if lang != "en"]
 PLACEHOLDER = re.compile(r"%\((\w+)\)s")
 ROMANIAN_DIACRITICS = re.compile("[ăâîșțşţĂÂÎȘȚŞŢ]")
