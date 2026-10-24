@@ -1,4 +1,4 @@
-from dwg_sheets_to_pdf.sheets import Rect, Sheet, duplicates, find_sheets, labels, rectangles, safe_filename
+from dwg_sheets.sheets import Rect, Sheet, duplicates, find_sheets, labels, rectangles, safe_filename
 
 
 def pline(points, closed=True, bulge=0.0):

@@ -58,7 +58,7 @@ def create_app(
             task.cancel()
             service.shutdown()
 
-    app = FastAPI(title="DWG Sheets to PDF", version=__version__, lifespan=lifespan, docs_url=None, redoc_url=None)
+    app = FastAPI(title="DWG Sheets", version=__version__, lifespan=lifespan, docs_url=None, redoc_url=None)
 
     @app.middleware("http")
     async def require_password(request: Request, call_next):
@@ -66,7 +66,7 @@ def create_app(
             return Response(
                 "Password required",
                 status_code=401,
-                headers={"WWW-Authenticate": 'Basic realm="DWG Sheets to PDF", charset="UTF-8"'},
+                headers={"WWW-Authenticate": 'Basic realm="DWG Sheets", charset="UTF-8"'},
             )
         return await call_next(request)
 
@@ -80,7 +80,7 @@ def create_app(
     def healthz() -> dict:
         return {"status": "ok", "version": __version__}
 
-    static_dir = files("dwg_sheets_to_pdf.web").joinpath("static")
+    static_dir = files("dwg_sheets.web").joinpath("static")
     app.mount("/static", StaticFiles(directory=str(static_dir)), name="static")
 
     @app.get("/favicon.ico", include_in_schema=False)
@@ -117,7 +117,7 @@ def main() -> None:
     import uvicorn
 
     uvicorn.run(
-        "dwg_sheets_to_pdf.web.app:create_app",
+        "dwg_sheets.web.app:create_app",
         factory=True,
         host=os.environ.get("HOST", "0.0.0.0"),
         port=int(os.environ.get("PORT", "8000")),

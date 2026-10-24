@@ -6,8 +6,8 @@ import zipfile
 import pytest
 from fakes import PDF, WEBP, fake_exporter, fake_planner, wait
 
-from dwg_sheets_to_pdf.cadcraft import CadCraftError
-from dwg_sheets_to_pdf.web.settings import Settings
+from dwg_sheets.cadcraft import CadCraftError
+from dwg_sheets.web.settings import Settings
 
 
 def upload(client, name="Project.dwg", data=b"AC1032 drawing", **kw):

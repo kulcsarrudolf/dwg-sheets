@@ -20,7 +20,7 @@ PREVIEW_RATIO = 4 / 3
 
 
 def templates() -> Jinja2Templates:
-    t = Jinja2Templates(directory=str(files("dwg_sheets_to_pdf.web").joinpath("templates")))
+    t = Jinja2Templates(directory=str(files("dwg_sheets.web").joinpath("templates")))
     # {% trans %} blocks call the per-request gettext/ngettext passed in each render's context.
     t.env.add_extension("jinja2.ext.i18n")
     t.env.policies["ext.i18n.trimmed"] = True

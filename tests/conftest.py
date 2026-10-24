@@ -2,8 +2,8 @@ import pytest
 from fakes import fake_exporter, fake_planner
 from fastapi.testclient import TestClient
 
-from dwg_sheets_to_pdf.web.app import create_app
-from dwg_sheets_to_pdf.web.settings import Settings
+from dwg_sheets.web.app import create_app
+from dwg_sheets.web.settings import Settings
 
 
 @pytest.fixture
