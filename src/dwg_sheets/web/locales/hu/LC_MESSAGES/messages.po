@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: DWG Sheets VERSION\n"
 "Report-Msgid-Bugs-To: https://github.com/kulcsarrudolf/dwg-sheets/issues\n"
-"POT-Creation-Date: 2026-10-23 15:50+0300\n"
+"POT-Creation-Date: 2026-11-04 13:22+0200\n"
 "PO-Revision-Date: 2026-10-23 15:17+0300\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language: hu\n"
@@ -40,8 +40,8 @@ msgid "This export no longer exists. Uploads are deleted after a while, so uploa
 msgstr "Ez az export már nem létezik. A feltöltések egy idő után törlődnek, ezért töltse fel újra a rajzot."
 
 #: src/dwg_sheets/web/i18n.py:41
-msgid "No sheets found. Each sheet needs a “PL. NR.” title block inside a rectangular frame."
-msgstr "Nem található tervlap. Minden tervlaphoz egy „PL. NR.” szövegmező kell egy téglalap alakú kereten belül."
+msgid "No sheets found. Each sheet needs a title block text inside a rectangular frame."
+msgstr "Nem található tervlap. Minden tervlaphoz egy szövegmező-szöveg kell egy téglalap alakú kereten belül."
 
 #: src/dwg_sheets/web/i18n.py:42
 msgid "The drawing could not be read. Check that it opens in AutoCAD and try again."
@@ -51,19 +51,35 @@ msgstr "A rajzot nem sikerült beolvasni. Ellenőrizze, hogy megnyílik-e AutoCA
 msgid "Something went wrong while exporting. Try again."
 msgstr "Hiba történt az exportálás közben. Próbálja újra."
 
+#: src/dwg_sheets/web/i18n.py:44
+msgid "The pattern is not a valid regular expression with a group in brackets around the value."
+msgstr "A minta nem érvényes reguláris kifejezés, vagy hiányzik belőle az értéket körülvevő zárójeles csoport."
+
+#: src/dwg_sheets/web/i18n.py:45
+msgid "Choose automatic, m, cm or mm."
+msgstr "Válasszon: automatikus, m, cm vagy mm."
+
 #: src/dwg_sheets/web/i18n.py:46
+msgid "Margins must be four numbers from 0 to 500 mm: left, bottom, right, top."
+msgstr "A margó négy szám 0 és 500 mm között: bal, alsó, jobb, felső."
+
+#: src/dwg_sheets/web/i18n.py:47
+msgid "The drawing is still being exported. Wait until it is done."
+msgstr "A rajz exportálása még tart. Várja meg, amíg elkészül."
+
+#: src/dwg_sheets/web/i18n.py:50
 msgid "no frame around its title block"
 msgstr "nincs keret a szövegmező körül"
 
-#: src/dwg_sheets/web/i18n.py:47
+#: src/dwg_sheets/web/i18n.py:51
 msgid "no 1:N scale inside its frame"
 msgstr "nincs 1:N méretarány a keretben"
 
-#: src/dwg_sheets/web/i18n.py:48
+#: src/dwg_sheets/web/i18n.py:52
 msgid "the scale in its title block is not valid"
 msgstr "a szövegmezőben lévő méretarány érvénytelen"
 
-#: src/dwg_sheets/web/i18n.py:73
+#: src/dwg_sheets/web/i18n.py:77
 #, python-format
 msgid "%(failed)s of %(total)s sheet could not be exported."
 msgid_plural "%(failed)s of %(total)s sheets could not be exported."
@@ -77,23 +93,27 @@ msgstr "A fájlok törölve lettek a szerverről."
 msgid "Finds each sheet"
 msgstr "Megtalálja a tervlapokat"
 
-#: src/dwg_sheets/web/templates/_intro.html:5
-msgid "Every title block with a “PL. NR.” sheet number marks a sheet. The rectangle around it is the page."
-msgstr "Minden „PL. NR.” lapszámos szövegmező egy tervlapot jelöl. A körülötte lévő téglalap a lap."
+#: src/dwg_sheets/web/templates/_intro.html:6
+msgid "Every title block with a sheet number, such as “PL. NR. A07”, marks a sheet. The rectangle around it is the page."
+msgstr "Minden lapszámos szövegmező (például „PL. NR. A07”) egy tervlapot jelöl. A körülötte lévő téglalap a lap."
 
-#: src/dwg_sheets/web/templates/_intro.html:8
+#: src/dwg_sheets/web/templates/_intro.html:7
+msgid "An AI model works out how each drawing writes its sheet numbers."
+msgstr "Egy AI-modell kideríti, hogyan írja az adott rajz a lapszámokat."
+
+#: src/dwg_sheets/web/templates/_intro.html:11
 msgid "Keeps the scale"
 msgstr "Megtartja a méretarányt"
 
-#: src/dwg_sheets/web/templates/_intro.html:9
+#: src/dwg_sheets/web/templates/_intro.html:12
 msgid "The “SCARA 1:N” in the title block sets the plot scale, so a 1:100 sheet prints at 1:100 at 100%."
 msgstr "A szövegmező „SCARA 1:N” értéke adja a plottolási méretarányt, így egy 1:100-as lap 100%-on nyomtatva 1:100-as."
 
-#: src/dwg_sheets/web/templates/_intro.html:12
+#: src/dwg_sheets/web/templates/_intro.html:15
 msgid "Frames the page"
 msgstr "Lapra igazít"
 
-#: src/dwg_sheets/web/templates/_intro.html:13
+#: src/dwg_sheets/web/templates/_intro.html:16
 msgid "A double border uses its outer line as the paper edge. A single border gets 20 mm binding and 10 mm margins."
 msgstr "Dupla keretnél a külső vonal a papír széle. Az egyszerű keret 20 mm fűzési és 10 mm egyéb margót kap."
 
@@ -123,82 +143,164 @@ msgid "%(done)s of %(total)s sheet"
 msgid_plural "%(done)s of %(total)s sheets"
 msgstr[0] "%(done)s / %(total)s tervlap"
 
-#: src/dwg_sheets/web/templates/_job.html:32
+#: src/dwg_sheets/web/templates/_job.html:37
+msgid "Title block"
+msgstr "Szövegmező"
+
+#: src/dwg_sheets/web/templates/_job.html:40
+msgid "found by AI"
+msgstr "AI találta"
+
+#: src/dwg_sheets/web/templates/_job.html:41
+#: src/dwg_sheets/web/templates/_job.html:51
+msgid "yours"
+msgstr "Ön adta meg"
+
+#: src/dwg_sheets/web/templates/_job.html:42
+msgid "built-in"
+msgstr "beépített"
+
+#: src/dwg_sheets/web/templates/_job.html:47
+#: src/dwg_sheets/web/templates/_job.html:83
+msgid "Units"
+msgstr "Mértékegység"
+
+#: src/dwg_sheets/web/templates/_job.html:50
+msgid "from the frame sizes"
+msgstr "a keretek méretéből"
+
+#: src/dwg_sheets/web/templates/_job.html:52
+msgid "default"
+msgstr "alapértelmezett"
+
+#: src/dwg_sheets/web/templates/_job.html:57
+msgid "Margins"
+msgstr "Margók"
+
+#: src/dwg_sheets/web/templates/_job.html:61
+msgid "Change"
+msgstr "Módosítás"
+
+#: src/dwg_sheets/web/templates/_job.html:67
+msgid "The AI model could not be reached, so the built-in pattern was used."
+msgstr "Az AI-modell nem volt elérhető, ezért a beépített minta készült."
+
+#: src/dwg_sheets/web/templates/_job.html:69
+msgid "The AI model found nothing better than the built-in pattern."
+msgstr "Az AI-modell nem talált jobbat a beépített mintánál."
+
+#: src/dwg_sheets/web/templates/_job.html:73
+msgid "Title pattern"
+msgstr "Szövegmező mintája"
+
+#: src/dwg_sheets/web/templates/_job.html:75
+msgid "A regular expression that finds the sheet number text. Its first group in brackets is the sheet name."
+msgstr "Reguláris kifejezés, amely megtalálja a lapszám szövegét. Az első zárójeles csoportja a tervlap neve."
+
+#: src/dwg_sheets/web/templates/_job.html:78
+msgid "Scale pattern"
+msgstr "Méretarány mintája"
+
+#: src/dwg_sheets/web/templates/_job.html:80
+msgid "Its first group is the N of a 1:N scale."
+msgstr "Az első csoportja az 1:N méretarány N értéke."
+
+#: src/dwg_sheets/web/templates/_job.html:85
+msgid "Automatic"
+msgstr "Automatikus"
+
+#: src/dwg_sheets/web/templates/_job.html:91
+msgid "Margins (mm)"
+msgstr "Margók (mm)"
+
+#: src/dwg_sheets/web/templates/_job.html:93
+msgid "Left, bottom, right, top, around a single frame."
+msgstr "Bal, alsó, jobb, felső, egyszeres keret körül."
+
+#: src/dwg_sheets/web/templates/_job.html:96
+msgid "Export again"
+msgstr "Exportálás újra"
+
+#: src/dwg_sheets/web/templates/_job.html:97
+msgid "Back to automatic"
+msgstr "Vissza az automatikushoz"
+
+#: src/dwg_sheets/web/templates/_job.html:105
 #, python-format
 msgid "Several sheets share a sheet number: %(list)s. Their files get -1, -2, and so on after the number, in order from left to right on the drawing. You may want to renumber their title blocks."
 msgstr "Több tervlapnak azonos a lapszáma: %(list)s. A fájljaik a szám után -1, -2 stb. jelölést kapnak, a rajzon balról jobbra haladva. Érdemes átszámozni a szövegmezőiket."
 
-#: src/dwg_sheets/web/templates/_job.html:41
+#: src/dwg_sheets/web/templates/_job.html:114
 #, python-format
 msgid "%(count)s sheet"
 msgid_plural "%(count)s sheets"
 msgstr[0] "%(count)s tervlap"
 
-#: src/dwg_sheets/web/templates/_job.html:47
+#: src/dwg_sheets/web/templates/_job.html:120
 msgid "Select all"
 msgstr "Összes kijelölése"
 
-#: src/dwg_sheets/web/templates/_job.html:50
-#: src/dwg_sheets/web/templates/_job.html:52
+#: src/dwg_sheets/web/templates/_job.html:123
+#: src/dwg_sheets/web/templates/_job.html:125
 msgid "Download all (ZIP)"
 msgstr "Összes letöltése (ZIP)"
 
-#: src/dwg_sheets/web/templates/_job.html:55
+#: src/dwg_sheets/web/templates/_job.html:128
 msgid "Delete files now"
 msgstr "Fájlok törlése most"
 
-#: src/dwg_sheets/web/templates/_job.html:68
+#: src/dwg_sheets/web/templates/_job.html:141
 msgid "Open PDF"
 msgstr "PDF megnyitása"
 
-#: src/dwg_sheets/web/templates/_job.html:70
+#: src/dwg_sheets/web/templates/_job.html:143
 msgid "Failed"
 msgstr "Sikertelen"
 
-#: src/dwg_sheets/web/templates/_job.html:72
+#: src/dwg_sheets/web/templates/_job.html:145
 msgid "Plotting"
 msgstr "Plottolás"
 
-#: src/dwg_sheets/web/templates/_job.html:77
+#: src/dwg_sheets/web/templates/_job.html:150
 msgid "Select"
 msgstr "Kijelölés"
 
-#: src/dwg_sheets/web/templates/_job.html:80
+#: src/dwg_sheets/web/templates/_job.html:153
 #, python-format
 msgid "Select %(name)s"
 msgstr "%(name)s kijelölése"
 
-#: src/dwg_sheets/web/templates/_job.html:92
+#: src/dwg_sheets/web/templates/_job.html:165
 msgid "Download PDF"
 msgstr "PDF letöltése"
 
-#: src/dwg_sheets/web/templates/_job.html:92
+#: src/dwg_sheets/web/templates/_job.html:165
 #, python-format
 msgid "Download %(name)s as PDF"
 msgstr "%(name)s letöltése PDF-ként"
 
-#: src/dwg_sheets/web/templates/_job.html:95
+#: src/dwg_sheets/web/templates/_job.html:168
 msgid "Download PNG"
 msgstr "PNG letöltése"
 
-#: src/dwg_sheets/web/templates/_job.html:95
+#: src/dwg_sheets/web/templates/_job.html:168
 #, python-format
 msgid "Download %(name)s as PNG"
 msgstr "%(name)s letöltése PNG-ként"
 
-#: src/dwg_sheets/web/templates/_job.html:110
+#: src/dwg_sheets/web/templates/_job.html:183
 msgid "Selected"
 msgstr "Kijelölve"
 
-#: src/dwg_sheets/web/templates/_job.html:111
+#: src/dwg_sheets/web/templates/_job.html:184
 msgid "Clear"
 msgstr "Kijelölés törlése"
 
-#: src/dwg_sheets/web/templates/_job.html:112
+#: src/dwg_sheets/web/templates/_job.html:185
 msgid "Download selected (ZIP)"
 msgstr "Kijelöltek letöltése (ZIP)"
 
-#: src/dwg_sheets/web/templates/_job.html:118
+#: src/dwg_sheets/web/templates/_job.html:191
 #, python-format
 msgid "Skipped %(name)s: %(reason)s"
 msgstr "Kihagyva: %(name)s (%(reason)s)"
@@ -218,8 +320,8 @@ msgid "Uploaded drawings and their PDFs are deleted automatically after %(ttl)s 
 msgstr "A feltöltött rajzok és PDF-jeik %(ttl)s perc után automatikusan törlődnek."
 
 #: src/dwg_sheets/web/templates/base.html:34
-msgid "Drawing units are metres."
-msgstr "A rajz mértékegysége méter."
+msgid "Drawing units are worked out from the frame sizes."
+msgstr "A rajz mértékegységét a keretek méretéből számolja ki."
 
 #: src/dwg_sheets/web/templates/index.html:10
 msgid "Drop a .dwg or .dxf file here"

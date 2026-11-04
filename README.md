@@ -24,6 +24,30 @@ For each title block in the drawing:
 
 Sheets without a frame or a scale are skipped and listed, so nothing is silently left out.
 
+### Other offices' drawings
+
+The built-in title pattern fits one office's drawings.
+Other drawings write `Sheet no: 12`, `DWG NO. A-101` or `PLANSA NR. 3`, and may be drawn in centimetres or millimetres.
+
+- **Units** are worked out from the frames, with no AI: the tool picks the unit that turns each frame and its scale into a real paper size.
+  A 270 x 118.8 frame at 1:200 is 1350 x 594 mm in metres, but 135 x 59 mm in centimetres, so it is metres.
+- **Title and scale patterns** can be found by an AI model through [OpenRouter](https://openrouter.ai).
+  The model gets a short summary of the drawing's texts, grouped by shape (`PL. NR. #`, `#.##`), and the sizes of its rectangles.
+  It tries patterns with a tool that runs the real sheet finder and reports which sheets it finds, for up to 4 turns.
+  Its patterns are only used when they find more sheets than the built-in ones, so a wrong answer never does worse than the tool without AI.
+  If the call fails, the built-in patterns are used and the page says so.
+- Answers are cached by drawing summary and model, so the same drawing uploaded again costs nothing.
+  Only the patterns are kept, never drawing texts.
+
+The default model is `anthropic/claude-sonnet-5.5` (USD 2 per million input tokens, 10 per million output).
+A new drawing usually costs USD 0.03-0.12; the same drawing again comes from the cache for free.
+A cheaper model such as `anthropic/claude-haiku-5.5` costs about 20 times less and is set with `OPENROUTER_MODEL`.
+The drawing's texts are sent to OpenRouter and the model's provider; the drawing file itself never leaves the server.
+
+The web page shows what each drawing was read with (title block, units, margins) above its sheets.
+**Change** opens a form to set the title pattern, scale pattern, units and margins, then export again from the same upload.
+Scripts can do the same with `POST /api/jobs/<id>/rerun` (form fields `title_pattern`, `scale_pattern`, `units`, `margins` as `L,B,R,T`), or pass the fields with the upload.
+
 ## Web app (Docker)
 
 Upload a drawing in the browser, watch its sheets plot, and download them one by one or as a ZIP.
@@ -63,6 +87,8 @@ Settings, all optional:
 | `MAX_CONCURRENT_JOBS` | `2` | Drawings processed at the same time |
 | `EXPORT_WORKERS` | `4` | Sheets plotted in parallel per drawing |
 | `WORK_DIR` | `/tmp/jobs` | Where jobs are kept while they live |
+| `OPENROUTER_API_KEY` | none | Turns on the AI agent for title and scale patterns. Without it, the built-in patterns are used. |
+| `OPENROUTER_MODEL` | `anthropic/claude-sonnet-5.5` | Any OpenRouter model that supports tool calls |
 
 Job state lives on the local disk of the container, so run a single instance (or pin each user to one instance).
 
@@ -96,8 +122,11 @@ Options:
 | Option | Meaning |
 |---|---|
 | `-o, --out DIR` | Output folder |
-| `--units m\|cm\|mm` | Drawing units (default `m`) |
+| `--units auto\|m\|cm\|mm` | Drawing units (default `auto`: worked out from the frame sizes) |
 | `--title-pattern REGEX` | What marks a title block; the first group is the sheet name. Default matches `PL. NR. A07`. Example: `--title-pattern 'Sheet no:\s*(\S+)'` |
+| `--scale-pattern REGEX` | How the scale is written; the first group is N in 1:N. Default matches `1:100` |
+| `--ai` | Let an AI model find the title and scale patterns. Needs `OPENROUTER_API_KEY`; answers are cached in `~/.cache/dwg-sheets` |
+| `--model ID` | OpenRouter model for `--ai` (default `$OPENROUTER_MODEL` or `anthropic/claude-sonnet-5.5`) |
 | `--margins L,B,R,T` | Page margins in mm around a single frame (default `20,10,10,10`) |
 | `--png [standard\|2x]` | Also write a PNG image of each sheet: `standard` is 150 dpi, `2x` is 300 dpi |
 | `--dry-run` | List the sheets and page sizes without exporting |
@@ -108,6 +137,8 @@ The outer frame line is left out only inside the export run; the drawing is not 
 
 ## Limits
 
+- The sheet name must be in the same text as its label, or be a text that nothing else in the drawing looks like.
+  A label and a number in two separate texts are found only when the number alone is distinctive (`A07`, `S-101`).
 - Frames must be closed rectangular polylines. A frame drawn as four separate lines is not found; the next rectangle around the title block is used instead, if there is one.
 - Colours are plotted as drawn.
 - CADCraft is in early development. Check the PDFs before you send them.

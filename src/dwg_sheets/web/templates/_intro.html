@@ -2,7 +2,10 @@
 <section class="how">
   <div>
     <h3>{{ _('Finds each sheet') }}</h3>
-    <p>{{ _('Every title block with a “PL. NR.” sheet number marks a sheet. The rectangle around it is the page.') }}</p>
+    <p>
+      {{ _('Every title block with a sheet number, such as “PL. NR. A07”, marks a sheet. The rectangle around it is the page.') }}
+      {% if config.ai %}{{ _('An AI model works out how each drawing writes its sheet numbers.') }}{% endif %}
+    </p>
   </div>
   <div>
     <h3>{{ _('Keeps the scale') }}</h3>

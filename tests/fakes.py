@@ -4,6 +4,7 @@ import time
 from pathlib import Path
 
 from dwg_sheets.export import Plan, SheetResult
+from dwg_sheets.profile import Profile
 from dwg_sheets.sheets import Rect, Sheet, Skipped, duplicates, labels
 
 PDF = b"%PDF-1.7 fake\n"
@@ -11,9 +12,13 @@ PNG = b"\x89PNG\r\n\x1a\n fake"
 WEBP = b"RIFF\x00\x00\x00\x00WEBP fake"
 
 
-def fake_planner(names=("A13", "A14"), skipped=()):
+def fake_planner(names=("A13", "A14"), skipped=(), profile=None, seen=None):
+    """Plans the given sheets. `seen` collects the options of every call; `profile` is what it reports using."""
+
     def planner(drawing: Path, out_dir: Path, options, stem: str) -> Plan:
         assert drawing.read_bytes().startswith(b"AC10")
+        if seen is not None:
+            seen.append(options)
         sheets = [Sheet(n, Rect(50 * i, 0, 50 * i + 42, 29.7), 100.0, double=(i == 0)) for i, n in enumerate(names)]
         results = [
             SheetResult(
@@ -28,7 +33,15 @@ def fake_planner(names=("A13", "A14"), skipped=()):
             )
             for s, label in zip(sheets, labels(sheets), strict=True)
         ]
-        return Plan(drawing, results, [Skipped(*s) for s in skipped], sheets, duplicates(sheets))
+        used = profile or Profile(
+            title_pattern=options.title_pattern or Profile.title_pattern,
+            units=options.units if options.units != "auto" else "m",
+            margins_mm=options.margins_mm,
+            patterns_from="user" if options.title_pattern else "default",
+            units_from="user" if options.units != "auto" else "frames",
+            example=f"PL. NR. {names[0]}" if names else None,
+        )
+        return Plan(drawing, results, [Skipped(*s) for s in skipped], sheets, duplicates(sheets), used)
 
     return planner
 

@@ -38,9 +38,13 @@ ERRORS = {
     "empty": N_("The file is empty."),
     "bad_images": N_("Choose PDF only, PDF + PNG, or PDF + PNG 2×."),
     "not_found": N_("This export no longer exists. Uploads are deleted after a while, so upload the drawing again."),
-    "no_sheets": N_("No sheets found. Each sheet needs a “PL. NR.” title block inside a rectangular frame."),
+    "no_sheets": N_("No sheets found. Each sheet needs a title block text inside a rectangular frame."),
     "unreadable": N_("The drawing could not be read. Check that it opens in AutoCAD and try again."),
     "unexpected": N_("Something went wrong while exporting. Try again."),
+    "bad_pattern": N_("The pattern is not a valid regular expression with a group in brackets around the value."),
+    "bad_units": N_("Choose automatic, m, cm or mm."),
+    "bad_margins": N_("Margins must be four numbers from 0 to 500 mm: left, bottom, right, top."),
+    "busy": N_("The drawing is still being exported. Wait until it is done."),
 }
 SKIP_REASONS = {
     "no_frame": N_("no frame around its title block"),

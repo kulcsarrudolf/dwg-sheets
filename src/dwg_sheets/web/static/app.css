@@ -139,6 +139,41 @@ h1 { margin: 0; font: 600 clamp(28px, 5vw, 40px)/1.1 var(--display); letter-spac
 .warn { padding: 12px 14px; background: var(--warn-soft); color: var(--warn); border-left: 3px solid var(--warn); }
 .note { margin: 0; color: var(--graphite); }
 
+/* ---- Settings the drawing was read with; opens into a form to change them ---- */
+.profile { border: 1px solid var(--rule); background: var(--sheet); }
+.profile > summary {
+  display: flex; flex-wrap: wrap; gap: 8px 16px; align-items: center; justify-content: space-between;
+  padding: 10px 14px; list-style: none; cursor: pointer;
+}
+.profile > summary::-webkit-details-marker { display: none; }
+.profile > summary:focus-visible { outline: 2px solid var(--accent); outline-offset: -2px; }
+.profile[open] > summary { border-bottom: 1px solid var(--rule); }
+.profile[open] .profile-toggle { display: none; }
+.profile > summary:hover .profile-toggle { color: var(--ink); }
+.facts { display: flex; flex-wrap: wrap; gap: 8px 28px; min-width: 0; }
+.fact { display: grid; gap: 3px; min-width: 0; }
+.fact-k, .field-k { color: var(--graphite); font: 500 11px/1 var(--mono); letter-spacing: .06em; text-transform: uppercase; }
+.fact-v { display: flex; flex-wrap: wrap; gap: 4px 8px; align-items: baseline; font-size: 14px; }
+.fact-v code { font: 13px var(--mono); overflow-wrap: anywhere; }
+.src { color: var(--graphite); font-size: 12px; }
+.src.ai { color: var(--accent); }
+
+.profile-form { display: grid; gap: 14px; grid-template-columns: repeat(2, minmax(0, 1fr)); padding: 14px; }
+.profile-form > .note, .profile-form > .alert, .field.wide, .profile-actions { grid-column: 1 / -1; }
+.field { display: grid; gap: 6px; align-content: start; }
+.field input, .field select {
+  width: 100%; padding: 8px 10px;
+  border: 1px solid var(--rule); background: var(--paper); color: var(--ink);
+  font: 14px/1.3 var(--body);
+}
+.field input[name$="pattern"], .field input[name="margins"] { font-family: var(--mono); font-size: 13px; }
+.field input:focus-visible, .field select:focus-visible { outline: 2px solid var(--accent); outline-offset: 1px; border-color: transparent; }
+.field small { color: var(--graphite); font-size: 12px; }
+.profile-actions { display: flex; flex-wrap: wrap; gap: 8px; }
+@media (max-width: 560px) {
+  .profile-form { grid-template-columns: minmax(0, 1fr); }
+}
+
 /* ---- Buttons ---------------------------------------------------------- */
 .btn {
   display: inline-flex; align-items: center; justify-content: center; gap: 7px;

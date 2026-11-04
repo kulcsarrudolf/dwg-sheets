@@ -8,3 +8,7 @@ build
 *.dwg
 *.dxf
 *.pdf
+.env
+tmp
+.claude
+.env.example
