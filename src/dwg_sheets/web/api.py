@@ -8,15 +8,38 @@ from fastapi import APIRouter, Form, Query, UploadFile
 from fastapi.responses import FileResponse, JSONResponse, Response
 
 from .jobs import JobState
-from .service import JobService, file_url, urls
+from .service import JobService, file_url, settings_request, urls
+
+# Optional settings on upload and re-run. Left out, they are worked out per drawing.
+Text = Annotated[str | None, Form()]
 
 
 def api_router(service: JobService) -> APIRouter:
     router = APIRouter(prefix="/api")
 
     @router.post("/jobs", status_code=202)
-    async def create_job(file: UploadFile, images: Annotated[str, Form()] = "none") -> JSONResponse:
-        return JSONResponse(_public(await service.start(file, images)), status_code=202)
+    async def create_job(
+        file: UploadFile,
+        images: Annotated[str, Form()] = "none",
+        title_pattern: Text = None,
+        scale_pattern: Text = None,
+        units: Text = None,
+        margins: Text = None,
+    ) -> JSONResponse:
+        request = settings_request(title_pattern, scale_pattern, units, margins)
+        return JSONResponse(_public(await service.start(file, images, request)), status_code=202)
+
+    @router.post("/jobs/{job_id}/rerun", status_code=202)
+    def rerun_job(
+        job_id: str,
+        title_pattern: Text = None,
+        scale_pattern: Text = None,
+        units: Text = None,
+        margins: Text = None,
+    ) -> JSONResponse:
+        """Export the drawing of a finished job again, with these settings in place of the ones it had."""
+        request = settings_request(title_pattern, scale_pattern, units, margins)
+        return JSONResponse(_public(service.rerun(job_id, request)), status_code=202)
 
     @router.get("/jobs/{job_id}")
     def get_job(job_id: str) -> dict:

@@ -174,3 +174,16 @@ def test_zip_of_selected_sheets_skips_failed_ones(make_client):
         z = c.get(job["zip_url"], params={"sheet": [0, 1]})
         assert zipfile.ZipFile(io.BytesIO(z.content)).namelist() == ["Project - A13.pdf"]
         assert c.get(job["zip_url"], params={"sheet": [1]}).status_code == 404
+
+
+def test_ai_is_on_only_with_a_key(make_client):
+    with make_client() as c:
+        assert "An AI model works out" not in c.get("/").text
+    with make_client(openrouter_api_key="sk-test") as c:
+        assert "An AI model works out" in c.get("/").text
+
+
+def test_ai_settings_from_the_environment(tmp_path):
+    s = Settings.from_env({"WORK_DIR": str(tmp_path), "OPENROUTER_API_KEY": "sk-x", "OPENROUTER_MODEL": "a/b"})
+    assert (s.openrouter_api_key, s.openrouter_model) == ("sk-x", "a/b")
+    assert Settings.from_env({"WORK_DIR": str(tmp_path)}).openrouter_api_key is None

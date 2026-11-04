@@ -12,7 +12,9 @@ from fastapi.templating import Jinja2Templates
 from ..raster import PNG_QUALITY
 from .i18n import COOKIE, LANGUAGES, negotiate, translator
 from .jobs import JobState
-from .service import JobError, JobService, file_url, urls
+from .service import JobError, JobService, file_url, settings_request, urls
+
+Text = Annotated[str | None, Form()]
 
 _ONE_YEAR = 365 * 24 * 3600
 # Width over height of the box each sheet's preview sits in on the page; must match .card-media in app.css.
@@ -92,6 +94,34 @@ def views_router(service: JobService, settings_view: dict) -> APIRouter:
             return RedirectResponse(f"/jobs/{state.id}", status_code=303)
         return render(request, "_job.html", headers={"HX-Push-Url": f"/jobs/{state.id}"}, job=job_view(state))
 
+    @router.post("/jobs/{job_id}/settings", response_class=HTMLResponse)
+    def change_settings(
+        request: Request,
+        job_id: str,
+        title_pattern: Text = None,
+        scale_pattern: Text = None,
+        units: Text = None,
+        margins: Text = None,
+        auto: Text = None,
+    ) -> Response:
+        """Export again with the settings in the form, or with everything worked out again (`auto`)."""
+        try:
+            wanted = {} if auto else settings_request(title_pattern, scale_pattern, units, margins)
+            state = service.rerun(job_id, wanted)
+        except JobError as e:
+            try:
+                job = job_view(service.get(job_id))
+            except JobError:
+                return render(request, "_error.html", status_code=e.status, error=e)
+            # Keep what was typed, so a typo in the pattern can be fixed rather than typed again.
+            typed = {"title_pattern": title_pattern, "scale_pattern": scale_pattern, "units": units, "margins": margins}
+            job["settings"] = {**(job["settings"] or {}), **{k: v for k, v in typed.items() if v is not None}}
+            name = "_job.html" if is_htmx(request) else "index.html"
+            return render(request, name, status_code=e.status, job=job, settings_error=e)
+        if not is_htmx(request):
+            return RedirectResponse(f"/jobs/{state.id}", status_code=303)
+        return render(request, "_job.html", job=job_view(state))
+
     @router.delete("/jobs/{job_id}", response_class=HTMLResponse)
     def delete(request: Request, job_id: str) -> Response:
         try:
@@ -113,7 +143,7 @@ def job_view(state: JobState) -> dict:
         "id": state.id,
         "drawing": state.drawing,
         "status": state.status,
-        "running": state.status in ("queued", "reading", "exporting"),
+        "running": state.running,
         "error_code": state.error_code,
         "error_params": state.error_params,
         "done": done,
@@ -125,6 +155,7 @@ def job_view(state: JobState) -> dict:
         "pick_url": urls(state.id)["zip"],  # ?sheet=0&sheet=3 for only some sheets
         "ready": ready,
         "skipped": state.skipped,
+        "settings": settings_view(state),
         "sheets": [
             {
                 "index": i,
@@ -143,6 +174,29 @@ def job_view(state: JobState) -> dict:
             }
             for i, s in enumerate(sheets)
         ],
+    }
+
+
+def settings_view(state: JobState) -> dict | None:
+    """What the drawing was read with, for the summary above the sheets and the form to change it."""
+    p = state.profile
+    if not p:
+        return None
+    example = " ".join((p.get("example") or "").split())
+    margins = p["margins_mm"]
+    return {
+        "example": example if len(example) <= 60 else example[:59] + "\u2026",
+        "title_pattern": p["title_pattern"],
+        "scale_pattern": p["scale_pattern"],
+        "units": p["units"],
+        "margins_mm": margins,
+        "patterns_from": p["patterns_from"],
+        "units_from": p["units_from"],
+        "ai_model": p.get("ai_model"),
+        "ai_status": p.get("ai_status"),
+        # The form starts from what was used; units stay on auto unless the person chose them.
+        "form_units": state.request.get("units", "auto"),
+        "margins": ",".join(f"{m:g}" for m in margins),
     }
 
 

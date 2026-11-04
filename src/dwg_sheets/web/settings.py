@@ -7,6 +7,8 @@ import tempfile
 from dataclasses import dataclass
 from pathlib import Path
 
+from ..agent import DEFAULT_MODEL
+
 
 @dataclass(frozen=True)
 class Settings:
@@ -18,6 +20,9 @@ class Settings:
     cadcraft: str = "cadcraft-cli"
     # When set, every request needs HTTP Basic auth with this password (any user name).
     password: str | None = None
+    # When set, an AI model on OpenRouter finds how each drawing marks its title blocks (see agent.py).
+    openrouter_api_key: str | None = None
+    openrouter_model: str = DEFAULT_MODEL
 
     @classmethod
     def from_env(cls, env: dict[str, str] | None = None) -> Settings:
@@ -31,4 +36,6 @@ class Settings:
             export_workers=int(env.get("EXPORT_WORKERS", cls.export_workers)),
             cadcraft=env.get("CADCRAFT_CLI", cls.cadcraft),
             password=env.get("APP_PASSWORD") or None,
+            openrouter_api_key=env.get("OPENROUTER_API_KEY") or None,
+            openrouter_model=env.get("OPENROUTER_MODEL") or cls.openrouter_model,
         )

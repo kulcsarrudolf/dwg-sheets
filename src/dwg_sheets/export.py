@@ -9,27 +9,39 @@ from collections.abc import Callable
 from concurrent.futures import ThreadPoolExecutor
 from dataclasses import dataclass, field
 from pathlib import Path
+from typing import TYPE_CHECKING
 
 from .cadcraft import CadCraft, CadCraftError
+from .profile import DEFAULT_UNITS, Profile, infer_units
 from .raster import pdf_thumbnail, pdf_to_png
 from .sheets import (
     DEFAULT_MARGINS_MM,
+    DEFAULT_SCALE_PATTERN,
     DEFAULT_TITLE_PATTERN,
+    Rect,
     Sheet,
     Skipped,
     duplicates,
     find_sheets,
+    first_match,
     labels,
     rectangles,
     safe_filename,
 )
 
+if TYPE_CHECKING:
+    from .agent import Agent
+
 
 @dataclass(frozen=True)
 class Options:
-    unit_mm: float = 1000.0  # drawing units are metres
+    """What the person asked for. Anything left open is worked out per drawing (see `read_profile`)."""
+
+    # None: the AI agent finds the patterns when there is one, otherwise the built-in ones are used.
+    title_pattern: str | None = None
+    scale_pattern: str | None = None
+    units: str = "auto"  # auto (from the frame sizes) | m | cm | mm
     margins_mm: tuple[float, float, float, float] = DEFAULT_MARGINS_MM
-    title_pattern: str = DEFAULT_TITLE_PATTERN
     png_dpi: int | None = None  # also write a PNG of each sheet at this resolution
     thumb_box: tuple[int, int] | None = None  # also write a small preview fitted inside this box (pixels)
 
@@ -71,22 +83,73 @@ class Plan:
     sheets: list[Sheet] = field(repr=False)
     # Sheet numbers that several sheets share, with how many: usually a title block copied without renumbering.
     duplicates: dict[str, int] = field(default_factory=dict)
+    # The settings the drawing was read with, and where each came from.
+    profile: Profile = field(default_factory=Profile)
 
 
-def plan(cad: CadCraft, drawing: Path, out_dir: Path, options: Options, stem: str | None = None) -> Plan:
+def plan(
+    cad: CadCraft,
+    drawing: Path,
+    out_dir: Path,
+    options: Options,
+    stem: str | None = None,
+    agent: Agent | None = None,
+) -> Plan:
     """Find the sheets in `drawing`. PDFs are named "<stem> - <sheet>.pdf" (stem defaults to the file name)."""
-    sheets, skipped = find_sheets(rectangles(cad.polylines(drawing)), cad.texts(drawing), options.title_pattern)
+    rects, texts = rectangles(cad.polylines(drawing)), cad.texts(drawing)
+    profile, sheets, skipped = read_profile(rects, texts, options, agent)
     stem = stem or drawing.stem
     results = []
     for sheet, label in zip(sheets, labels(sheets), strict=True):
-        layout = sheet.plot(options.unit_mm, options.margins_mm)
+        layout = sheet.plot(profile.unit_mm, profile.margins_mm)
         out = out_dir / f"{stem} - {safe_filename(label)}.pdf"
         png = out.with_suffix(".png") if options.png_dpi else None
         thumb = out.with_suffix(".preview.webp") if options.thumb_box else None
         results.append(
             SheetResult(sheet.name, sheet.scale, layout.page_mm, sheet.double, out, label=label, png=png, thumb=thumb)
         )
-    return Plan(drawing, results, skipped, sheets, duplicates(sheets))
+    return Plan(drawing, results, skipped, sheets, duplicates(sheets), profile)
+
+
+def read_profile(
+    rects: list[Rect], texts: list[dict], options: Options, agent: Agent | None = None
+) -> tuple[Profile, list[Sheet], list[Skipped]]:
+    """Settle every setting for this drawing, then find its sheets with them.
+
+    Patterns the person gave are used as they are. Otherwise the agent, when there is one, looks for
+    better ones than the built-in patterns. Units left on auto are the ones that give the sheets real
+    paper sizes.
+    """
+    ai: dict = {}
+    if options.title_pattern or options.scale_pattern:
+        title = options.title_pattern or DEFAULT_TITLE_PATTERN
+        scale = options.scale_pattern or DEFAULT_SCALE_PATTERN
+        patterns_from = "user"
+    elif agent is not None:
+        found = agent.detect(rects, texts)
+        title, scale = found.title_pattern, found.scale_pattern
+        patterns_from = "ai" if found.status in ("improved", "cached") else "default"
+        ai = {"ai_model": found.model, "ai_status": found.status, "ai_cost_usd": found.cost_usd}
+    else:
+        title, scale, patterns_from = DEFAULT_TITLE_PATTERN, DEFAULT_SCALE_PATTERN, "default"
+
+    sheets, skipped = find_sheets(rects, texts, title, scale)
+    if options.units != "auto":
+        units, units_from = options.units, "user"
+    else:
+        inferred = infer_units(sheets, options.margins_mm)
+        units, units_from = (inferred, "frames") if inferred else (DEFAULT_UNITS, "default")
+    profile = Profile(
+        title_pattern=title,
+        scale_pattern=scale,
+        units=units,
+        margins_mm=options.margins_mm,
+        patterns_from=patterns_from,
+        units_from=units_from,
+        example=first_match(texts, title),
+        **ai,
+    )
+    return profile, sheets, skipped
 
 
 def export(
@@ -100,14 +163,14 @@ def export(
 
     def one(pair: tuple[Sheet, SheetResult]) -> SheetResult:
         sheet, result = pair
-        layout = sheet.plot(options.unit_mm, options.margins_mm)
+        layout = sheet.plot(p.profile.unit_mm, p.profile.margins_mm)
         result.file.parent.mkdir(parents=True, exist_ok=True)
         try:
             cad.export_pdf(
                 p.drawing,
                 result.file,
                 layout.window.box,
-                options.unit_mm / sheet.scale,
+                p.profile.unit_mm / sheet.scale,
                 layout.page_mm,
                 layout.hide,
             )

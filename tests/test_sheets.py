@@ -139,3 +139,17 @@ def test_sheets_sharing_a_number_get_labels_in_reading_order():
     assert labels(sheets) == ["A04", "A15-1", "A15-2", "A15-3"]
     assert duplicates(sheets) == {"A15": 3}
     assert labels(sheets[:2]) == ["A04", "A15"]  # a number used once keeps its plain name
+
+
+def test_custom_scale_pattern():
+    rects = [Rect(0, 0, 42, 29.7)]
+    texts = [text("PL. NR. A01", 40, 2), text("M 1/50", 39, 1), text("1:200 detail", 10, 10)]
+    (sheet,), _ = find_sheets(rects, texts, scale_pattern=r"M\s*1\s*/\s*(\d+)")
+    assert sheet.scale == 50
+
+
+def test_a_scale_pattern_that_matches_no_number_is_ignored():
+    rects = [Rect(0, 0, 42, 29.7)]
+    texts = [text("PL. NR. A01", 40, 2), text("Scale: NTS", 39, 1)]
+    sheets, skipped = find_sheets(rects, texts, scale_pattern=r"Scale:\s*(\S+)")
+    assert not sheets and skipped[0].code == "no_scale"

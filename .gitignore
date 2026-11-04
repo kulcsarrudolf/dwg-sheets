@@ -12,3 +12,12 @@ build/
 *.dwg
 *.dxf
 *.pdf
+
+# Local settings and secrets (OpenRouter key). .env.example shows what goes in it.
+.env
+
+# Scratch space kept out of git: promo videos and other local files.
+tmp/
+
+# Local Claude Code settings for this checkout.
+.claude/

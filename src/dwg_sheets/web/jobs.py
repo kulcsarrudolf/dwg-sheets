@@ -62,6 +62,13 @@ class JobState:
     skipped: list[dict] = field(default_factory=list)
     duplicates: dict[str, int] = field(default_factory=dict)  # sheet numbers several sheets share
     images: str = "none"  # none | standard | 2x: PNG images next to the PDFs (see raster.PNG_QUALITY)
+    # Settings the person gave (title_pattern, scale_pattern, units, margins_mm); what is left out is worked out.
+    request: dict = field(default_factory=dict)
+    profile: dict | None = None  # what the drawing was read with (profile.Profile), once it is read
+
+    @property
+    def running(self) -> bool:
+        return self.status in ("queued", "reading", "exporting")
 
     def to_json(self) -> dict:
         return asdict(self)
@@ -70,6 +77,10 @@ class JobState:
     def from_json(cls, data: dict) -> JobState:
         sheets = [SheetInfo(**s) for s in data.pop("sheets", [])]
         return cls(**data, sheets=sheets)
+
+
+class JobBusy(Exception):
+    """The job is still running, so it cannot start over yet."""
 
 
 class JobStore:
@@ -98,7 +109,13 @@ class JobStore:
 
     # State -----------------------------------------------------------------
 
-    def create(self, drawing_name: str, write_upload: Callable[[Path], None], images: str = "none") -> JobState:
+    def create(
+        self,
+        drawing_name: str,
+        write_upload: Callable[[Path], None],
+        images: str = "none",
+        request: dict | None = None,
+    ) -> JobState:
         job_id = uuid.uuid4().hex
         d = self.root / job_id
         (d / "input").mkdir(parents=True)
@@ -107,8 +124,24 @@ class JobStore:
         except BaseException:
             shutil.rmtree(d, ignore_errors=True)
             raise
-        state = JobState(job_id, drawing_name, time.time(), images=images)
+        state = JobState(job_id, drawing_name, time.time(), images=images, request=request or {})
         self.save(state)
+        return state
+
+    def reset(self, job_id: str, request: dict) -> JobState:
+        """Start a finished job over with other settings: its files go, the upload stays.
+
+        Raises KeyError if there is no such job and JobBusy while it is still running.
+        """
+        with self._lock:
+            old = self.load(job_id)
+            if old.running:
+                raise JobBusy(job_id)
+            state = JobState(old.id, old.drawing, old.created, images=old.images, request=request)
+            shutil.rmtree(self.pdf_dir(job_id), ignore_errors=True)
+            for z in self.dir(job_id).glob("sheets*.zip"):
+                z.unlink(missing_ok=True)
+            self._write(state)
         return state
 
     def input_path(self, job_id: str) -> Path:
@@ -124,11 +157,14 @@ class JobStore:
         return JobState.from_json(data)
 
     def save(self, state: JobState) -> None:
+        with self._lock:
+            self._write(state)
+
+    def _write(self, state: JobState) -> None:
         d = self.dir(state.id)
         tmp = d / "job.json.tmp"
-        with self._lock:
-            tmp.write_text(json.dumps(state.to_json()))
-            os.replace(tmp, d / "job.json")
+        tmp.write_text(json.dumps(state.to_json()))
+        os.replace(tmp, d / "job.json")
 
     def delete(self, job_id: str) -> None:
         shutil.rmtree(self.dir(job_id), ignore_errors=True)
@@ -192,8 +228,17 @@ def run_job(store: JobStore, job_id: str, options: Options, planner: Planner, ex
         store.save(state)
         drawing = store.input_path(job_id)
         stem = Path(state.drawing).stem
-        options = replace(options, png_dpi=PNG_QUALITY.get(state.images))
+        req = state.request
+        options = replace(
+            options,
+            png_dpi=PNG_QUALITY.get(state.images),
+            title_pattern=req.get("title_pattern") or None,
+            scale_pattern=req.get("scale_pattern") or None,
+            units=req.get("units") or "auto",
+            margins_mm=tuple(req["margins_mm"]) if req.get("margins_mm") else options.margins_mm,
+        )
         p = planner(drawing, store.pdf_dir(job_id), options, stem)
+        state.profile = p.profile.to_json()
         state.sheets = [
             SheetInfo(
                 r.name,
@@ -210,7 +255,7 @@ def run_job(store: JobStore, job_id: str, options: Options, planner: Planner, ex
         state.duplicates = dict(p.duplicates)
         if not p.results:
             state.status = "failed"
-            state.error = "No sheets found. Each sheet needs a 'PL. NR.' title block inside a rectangular frame."
+            state.error = "No sheets found. Each sheet needs a title block text inside a rectangular frame."
             state.error_code = "no_sheets"
             store.save(state)
             return

@@ -74,6 +74,7 @@ dependencies = [
     { name = "pillow", version = "12.3.0", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version < '3.11'" },
     { name = "pillow", version = "13.0.0", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version >= '3.11'" },
     { name = "pypdfium2" },
+    { name = "python-dotenv" },
 ]
 
 [package.optional-dependencies]
@@ -101,6 +102,7 @@ requires-dist = [
     { name = "jinja2", marker = "extra == 'web'", specifier = ">=3.1" },
     { name = "pillow", specifier = ">=10" },
     { name = "pypdfium2", specifier = ">=4.30" },
+    { name = "python-dotenv", specifier = ">=1.0" },
     { name = "python-multipart", marker = "extra == 'web'", specifier = ">=0.0.9" },
     { name = "uvicorn", extras = ["standard"], marker = "extra == 'web'", specifier = ">=0.30" },
 ]

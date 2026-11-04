@@ -15,6 +15,7 @@ from fastapi.responses import FileResponse, JSONResponse, Response
 from fastapi.staticfiles import StaticFiles
 
 from .. import __version__
+from ..agent import Agent, OpenRouterChat, ProfileCache
 from ..cadcraft import CadCraft
 from ..export import export, plan
 from .api import api_router
@@ -33,10 +34,15 @@ def create_app(
 ) -> FastAPI:
     settings = settings or Settings.from_env()
     store = JobStore(settings.work_dir, settings.job_ttl_minutes * 60)
+    # Outside the jobs' folders: an answer is worth keeping after the job is gone. It holds only patterns.
+    cache = ProfileCache(settings.work_dir.parent / f"{settings.work_dir.name}-profiles")
+    agent = None
+    if settings.openrouter_api_key:
+        agent = Agent(OpenRouterChat(settings.openrouter_api_key), settings.openrouter_model, cache)
 
     if planner is None or exporter is None:
         cad = CadCraft(settings.cadcraft)  # fails at start-up, not on the first upload, if CADCraft is missing
-        planner = planner or (lambda drawing, out_dir, opts, stem: plan(cad, drawing, out_dir, opts, stem))
+        planner = planner or (lambda drawing, out_dir, opts, stem: plan(cad, drawing, out_dir, opts, stem, agent=agent))
         exporter = exporter or (
             lambda p, opts, on_done: export(cad, p, opts, workers=settings.export_workers, on_done=on_done)
         )
@@ -45,11 +51,13 @@ def create_app(
     @contextlib.asynccontextmanager
     async def lifespan(app: FastAPI) -> AsyncIterator[None]:
         store.purge_expired()
+        cache.purge()
 
         async def purge_loop() -> None:
             while True:
                 await asyncio.sleep(60)
                 await asyncio.to_thread(store.purge_expired)
+                await asyncio.to_thread(cache.purge)
 
         task = asyncio.create_task(purge_loop())
         try:
@@ -91,7 +99,12 @@ def create_app(
     app.include_router(
         views_router(
             service,
-            {"max_upload_mb": settings.max_upload_mb, "ttl_minutes": settings.job_ttl_minutes, "version": __version__},
+            {
+                "max_upload_mb": settings.max_upload_mb,
+                "ttl_minutes": settings.job_ttl_minutes,
+                "version": __version__,
+                "ai": agent is not None,
+            },
         )
     )
     app.state.store = store
@@ -113,8 +126,14 @@ def _authorized(request: Request, password: str) -> bool:
 def main() -> None:
     """Run the web server. Reads HOST and PORT, as container services expect."""
     import os
+    from pathlib import Path
 
     import uvicorn
+    from dotenv import load_dotenv
+
+    # Settings such as OPENROUTER_API_KEY from .env when run locally. The real environment wins, and in
+    # Docker the file is not in the image: compose passes its values in as environment variables.
+    load_dotenv(Path.cwd() / ".env")
 
     uvicorn.run(
         "dwg_sheets.web.app:create_app",

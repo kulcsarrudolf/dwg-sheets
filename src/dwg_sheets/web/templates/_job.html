@@ -27,6 +27,79 @@
 
   {% if job.error_code %}<div class="alert" role="alert">{{ t.error(job.error_code, job.error_params) }}</div>{% endif %}
 
+  {%- set st = job.settings %}
+  {% if st and not job.running %}
+  {#- What the drawing was read with. Opens into a form to change it and export again from the same upload. -#}
+  <details class="profile"{% if settings_error or job.error_code == "no_sheets" %} open{% endif %}>
+    <summary>
+      <span class="facts">
+        <span class="fact">
+          <span class="fact-k">{{ _('Title block') }}</span>
+          <span class="fact-v"><code>{{ st.example or st.title_pattern }}</code>
+            <span class="src{% if st.patterns_from == 'ai' %} ai{% endif %}">
+              {%- if st.patterns_from == "ai" %}{{ _('found by AI') }}
+              {%- elif st.patterns_from == "user" %}{{ _('yours') }}
+              {%- else %}{{ _('built-in') }}{% endif -%}
+            </span>
+          </span>
+        </span>
+        <span class="fact">
+          <span class="fact-k">{{ _('Units') }}</span>
+          <span class="fact-v">{{ st.units }}
+            <span class="src">
+              {%- if st.units_from == "frames" %}{{ _('from the frame sizes') }}
+              {%- elif st.units_from == "user" %}{{ _('yours') }}
+              {%- else %}{{ _('default') }}{% endif -%}
+            </span>
+          </span>
+        </span>
+        <span class="fact">
+          <span class="fact-k">{{ _('Margins') }}</span>
+          <span class="fact-v">{{ st.margins_mm | map('num', t) | join(', ') }} mm</span>
+        </span>
+      </span>
+      <span class="btn quiet profile-toggle">{{ _('Change') }}</span>
+    </summary>
+
+    <form class="profile-form" action="/jobs/{{ job.id }}/settings" method="post"
+          hx-post="/jobs/{{ job.id }}/settings" hx-target="closest section.job" hx-swap="outerHTML">
+      {% if st.ai_status == "failed" %}
+      <p class="note">{{ _('The AI model could not be reached, so the built-in pattern was used.') }}</p>
+      {% elif st.ai_status == "agreed" %}
+      <p class="note">{{ _('The AI model found nothing better than the built-in pattern.') }}</p>
+      {% endif %}
+      {% if settings_error %}<div class="alert" role="alert">{{ t.error(settings_error.code, settings_error.params) }}</div>{% endif %}
+      <label class="field wide">
+        <span class="field-k">{{ _('Title pattern') }}</span>
+        <input name="title_pattern" value="{{ st.title_pattern }}" spellcheck="false" autocomplete="off" autocapitalize="off">
+        <small>{{ _('A regular expression that finds the sheet number text. Its first group in brackets is the sheet name.') }}</small>
+      </label>
+      <label class="field wide">
+        <span class="field-k">{{ _('Scale pattern') }}</span>
+        <input name="scale_pattern" value="{{ st.scale_pattern }}" spellcheck="false" autocomplete="off" autocapitalize="off">
+        <small>{{ _('Its first group is the N of a 1:N scale.') }}</small>
+      </label>
+      <label class="field">
+        <span class="field-k">{{ _('Units') }}</span>
+        <select name="units">
+          {% for value, label in [('auto', _('Automatic')), ('m', 'm'), ('cm', 'cm'), ('mm', 'mm')] %}
+          <option value="{{ value }}"{% if st.form_units == value %} selected{% endif %}>{{ label }}</option>
+          {% endfor %}
+        </select>
+      </label>
+      <label class="field">
+        <span class="field-k">{{ _('Margins (mm)') }}</span>
+        <input name="margins" value="{{ st.margins }}" inputmode="decimal" spellcheck="false" autocomplete="off">
+        <small>{{ _('Left, bottom, right, top, around a single frame.') }}</small>
+      </label>
+      <div class="profile-actions">
+        <button class="btn primary" type="submit">{{ _('Export again') }}</button>
+        <button class="btn quiet" type="submit" name="auto" value="1">{{ _('Back to automatic') }}</button>
+      </div>
+    </form>
+  </details>
+  {% endif %}
+
   {% if job.duplicates %}
   <div class="warn">
     {% trans list=job.duplicates %}Several sheets share a sheet number: {{ list }}. Their files get -1, -2, and so on after the number, in order from left to right on the drawing. You may want to renumber their title blocks.{% endtrans %}

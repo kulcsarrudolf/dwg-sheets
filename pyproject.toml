@@ -5,7 +5,11 @@ description = "Tools for the sheets drawn in model space of a DWG/DXF. Today: ex
 readme = "README.md"
 license = "MIT"
 requires-python = ">=3.10"
-dependencies = ["pypdfium2>=4.30", "pillow>=10"]
+dependencies = [
+    "pypdfium2>=4.30",
+    "pillow>=10",
+    "python-dotenv>=1.0",
+]
 
 [project.optional-dependencies]
 web = ["fastapi>=0.115", "uvicorn[standard]>=0.30", "python-multipart>=0.0.9", "jinja2>=3.1", "babel>=2.16"]

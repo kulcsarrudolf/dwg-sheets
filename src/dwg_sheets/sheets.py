@@ -21,7 +21,8 @@ from dataclasses import dataclass, field
 Point = tuple[float, float]
 
 DEFAULT_TITLE_PATTERN = r"PL\.?\s*NR\.?\s*:?\s*(\S+)"
-SCALE_PATTERN = re.compile(r"1\s*:\s*(\d+(?:[.,]\d+)?)")
+# Its first group is the N of a 1:N scale.
+DEFAULT_SCALE_PATTERN = r"1\s*:\s*(\d+(?:[.,]\d+)?)"
 
 # Paper millimetres per drawing unit at 1:1.
 UNIT_MM = {"m": 1000.0, "cm": 10.0, "mm": 1.0}
@@ -147,22 +148,29 @@ def find_sheets(
     rects: list[Rect],
     texts: list[dict],
     title_pattern: str = DEFAULT_TITLE_PATTERN,
+    scale_pattern: str = DEFAULT_SCALE_PATTERN,
 ) -> tuple[list[Sheet], list[Skipped]]:
     """Match title blocks to frames and scales.
 
-    `texts` are items with a `text` string and an `at` [x, y] insertion point.
+    `texts` are items with a `text` string and an `at` [x, y] insertion point. Both patterns are
+    searched in each text, ignoring case; the first group of each is the sheet name and the N of 1:N.
     """
-    title_re = re.compile(title_pattern, re.IGNORECASE | re.DOTALL)
+    title_re = compile_pattern(title_pattern)
     titles = []
     for t in texts:
         m = title_re.search(t["text"])
         if m:
-            titles.append((m.group(1) if m.groups() else m.group(0), _pt(t["at"])))
+            titles.append((_first_group(m).strip(), _pt(t["at"])))
+    titles = [(name, at) for name, at in titles if name]
+    scale_re = compile_pattern(scale_pattern)
     scales = []
     for t in texts:
-        m = SCALE_PATTERN.search(t["text"])
+        m = scale_re.search(t["text"])
         if m:
-            scales.append((float(m.group(1).replace(",", ".")), _pt(t["at"])))
+            try:
+                scales.append((float(_first_group(m).replace(",", ".")), _pt(t["at"])))
+            except ValueError:
+                continue  # the pattern matched something that is not a number
 
     sheets: list[Sheet] = []
     skipped: list[Skipped] = []
@@ -188,6 +196,17 @@ def find_sheets(
     # By sheet number, and sheets that share a number in reading order: left to right, then top to bottom.
     sheets.sort(key=lambda s: (_natural_key(s.name), round(s.frame.x0, 3), -round(s.frame.y1, 3)))
     return sheets, skipped
+
+
+def compile_pattern(pattern: str) -> re.Pattern:
+    """A title or scale pattern as `find_sheets` uses it. Raises re.error if it is not a valid regex."""
+    return re.compile(pattern, re.IGNORECASE | re.DOTALL)
+
+
+def first_match(texts: list[dict], pattern: str) -> str | None:
+    """The first text the pattern matches, to show the reader what a pattern picks up."""
+    pattern_re = compile_pattern(pattern)
+    return next((t["text"] for t in texts if pattern_re.search(t["text"])), None)
 
 
 def labels(sheets: list[Sheet]) -> list[str]:
@@ -229,6 +248,10 @@ def _inner_border(frame: Rect, rects: list[Rect]) -> Rect | None:
 def safe_filename(name: str) -> str:
     cleaned = re.sub(r'[\\/:*?"<>|\s]+', "_", name).strip("._")
     return cleaned or "sheet"
+
+
+def _first_group(m: re.Match) -> str:
+    return (m.group(1) if m.groups() else m.group(0)) or ""
 
 
 def _pt(at) -> Point:
